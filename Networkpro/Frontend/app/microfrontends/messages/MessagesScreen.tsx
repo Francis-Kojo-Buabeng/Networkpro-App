@@ -1,0 +1,680 @@
+import React, { useState } from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  TouchableOpacity,
+  Image,
+  TextInput,
+  FlatList,
+  Dimensions,
+} from 'react-native';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { useCurrentTheme } from '../../../contexts/ThemeContext';
+import MessageModal from '../../../components/MessageModal';
+import ProfileModal from '../../../components/ProfileModal';
+
+const { width } = Dimensions.get('window');
+
+interface Message {
+  id: string;
+  sender: string;
+  senderAvatar: any;
+  content: string;
+  timestamp: string;
+  isFromMe: boolean;
+}
+
+interface Conversation {
+  id: string;
+  name: string;
+  title: string;
+  company: string;
+  avatar: any;
+  lastMessage: string;
+  timestamp: string;
+  unreadCount: number;
+  isOnline: boolean;
+  isPinned: boolean;
+  messages: Message[];
+}
+
+interface MessagesScreenProps {
+  userAvatar?: string | null;
+}
+
+export default function MessagesScreen({ userAvatar }: MessagesScreenProps) {
+  const theme = useCurrentTheme();
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedFilter, setSelectedFilter] = useState<'all' | 'unread' | 'pinned'>('all');
+  const [selectedConversation, setSelectedConversation] = useState<Conversation | null>(null);
+  const [messageModalVisible, setMessageModalVisible] = useState(false);
+  const [profileModalVisible, setProfileModalVisible] = useState(false);
+  const [selectedProfile, setSelectedProfile] = useState<any | null>(null);
+  const [conversations, setConversations] = useState<Conversation[]>([
+    {
+      id: '1',
+      name: 'John Doe',
+      title: 'Software Engineer',
+      company: 'Tech Solutions Inc.',
+      avatar: require('@/assets/images/Avator-Image.jpg'),
+      lastMessage: 'Thanks for the referral! I\'ll definitely check it out.',
+      timestamp: '2m ago',
+      unreadCount: 2,
+      isOnline: true,
+      isPinned: true,
+      messages: [
+        {
+          id: 'msg1',
+          sender: 'John Doe',
+          senderAvatar: require('@/assets/images/Avator-Image.jpg'),
+          content: 'Hey! I saw your post about the job opening. I\'m really interested in the position.',
+          timestamp: '10:30 AM',
+          isFromMe: false,
+        },
+        {
+          id: 'msg2',
+          sender: 'You',
+          senderAvatar: require('@/assets/images/Avator-Image.jpg'),
+          content: 'Hi John! Thanks for reaching out. I\'d be happy to refer you for the position.',
+          timestamp: '10:32 AM',
+          isFromMe: true,
+        },
+        {
+          id: 'msg3',
+          sender: 'John Doe',
+          senderAvatar: require('@/assets/images/Avator-Image.jpg'),
+          content: 'Thanks for the referral! I\'ll definitely check it out.',
+          timestamp: '2m ago',
+          isFromMe: false,
+        },
+      ],
+    },
+    {
+      id: '2',
+      name: 'Jane Smith',
+      title: 'Product Manager',
+      company: 'Digital Marketing Pro',
+      avatar: require('@/assets/images/Avator-Image.jpg'),
+      lastMessage: 'The project timeline looks great. Let\'s discuss this tomorrow.',
+      timestamp: '1h ago',
+      unreadCount: 0,
+      isOnline: false,
+      isPinned: false,
+      messages: [
+        {
+          id: 'msg4',
+          sender: 'Jane Smith',
+          senderAvatar: require('@/assets/images/Avator-Image.jpg'),
+          content: 'Hi! I wanted to discuss the new project timeline we discussed.',
+          timestamp: '2:15 PM',
+          isFromMe: false,
+        },
+        {
+          id: 'msg5',
+          sender: 'You',
+          senderAvatar: require('@/assets/images/Avator-Image.jpg'),
+          content: 'Sure! I\'ve been working on the updated timeline.',
+          timestamp: '2:20 PM',
+          isFromMe: true,
+        },
+        {
+          id: 'msg6',
+          sender: 'Jane Smith',
+          senderAvatar: require('@/assets/images/Avator-Image.jpg'),
+          content: 'The project timeline looks great. Let\'s discuss this tomorrow.',
+          timestamp: '1h ago',
+          isFromMe: false,
+        },
+      ],
+    },
+    {
+      id: '3',
+      name: 'Mike Johnson',
+      title: 'UX Designer',
+      company: 'Creative Studio',
+      avatar: require('@/assets/images/Avator-Image.jpg'),
+      lastMessage: 'Can you share the design files? I need them for the presentation.',
+      timestamp: '3h ago',
+      unreadCount: 1,
+      isOnline: true,
+      isPinned: false,
+      messages: [
+        {
+          id: 'msg7',
+          sender: 'Mike Johnson',
+          senderAvatar: require('@/assets/images/Avator-Image.jpg'),
+          content: 'Hey! I\'m working on the presentation for tomorrow\'s meeting.',
+          timestamp: '11:00 AM',
+          isFromMe: false,
+        },
+        {
+          id: 'msg8',
+          sender: 'You',
+          senderAvatar: require('@/assets/images/Avator-Image.jpg'),
+          content: 'No problem! I\'ll send them over right away.',
+          timestamp: '11:05 AM',
+          isFromMe: true,
+        },
+        {
+          id: 'msg9',
+          sender: 'Mike Johnson',
+          senderAvatar: require('@/assets/images/Avator-Image.jpg'),
+          content: 'Can you share the design files? I need them for the presentation.',
+          timestamp: '3h ago',
+          isFromMe: false,
+        },
+      ],
+    },
+    {
+      id: '4',
+      name: 'Sarah Wilson',
+      title: 'Marketing Director',
+      company: 'Global Marketing',
+      avatar: require('@/assets/images/Avator-Image.jpg'),
+      lastMessage: 'The campaign results are in. We exceeded our targets!',
+      timestamp: '1d ago',
+      unreadCount: 0,
+      isOnline: false,
+      isPinned: true,
+      messages: [
+        {
+          id: 'msg10',
+          sender: 'Sarah Wilson',
+          senderAvatar: require('@/assets/images/Avator-Image.jpg'),
+          content: 'Great news! The Q4 campaign results are in.',
+          timestamp: 'Yesterday',
+          isFromMe: false,
+        },
+        {
+          id: 'msg11',
+          sender: 'You',
+          senderAvatar: require('@/assets/images/Avator-Image.jpg'),
+          content: 'That\'s fantastic! How did we perform?',
+          timestamp: 'Yesterday',
+          isFromMe: true,
+        },
+        {
+          id: 'msg12',
+          sender: 'Sarah Wilson',
+          senderAvatar: require('@/assets/images/Avator-Image.jpg'),
+          content: 'The campaign results are in. We exceeded our targets!',
+          timestamp: '1d ago',
+          isFromMe: false,
+        },
+      ],
+    },
+    {
+      id: '5',
+      name: 'Alex Brown',
+      title: 'Data Scientist',
+      company: 'Analytics Corp',
+      avatar: require('@/assets/images/Avator-Image.jpg'),
+      lastMessage: 'I\'ve sent you the updated analytics report.',
+      timestamp: '2d ago',
+      unreadCount: 0,
+      isOnline: true,
+      isPinned: false,
+      messages: [
+        {
+          id: 'msg13',
+          sender: 'Alex Brown',
+          senderAvatar: require('@/assets/images/Avator-Image.jpg'),
+          content: 'Hi! I\'ve been working on the quarterly analytics report.',
+          timestamp: '2 days ago',
+          isFromMe: false,
+        },
+        {
+          id: 'msg14',
+          sender: 'You',
+          senderAvatar: require('@/assets/images/Avator-Image.jpg'),
+          content: 'Perfect! I\'m looking forward to seeing the insights.',
+          timestamp: '2 days ago',
+          isFromMe: true,
+        },
+        {
+          id: 'msg15',
+          sender: 'Alex Brown',
+          senderAvatar: require('@/assets/images/Avator-Image.jpg'),
+          content: 'I\'ve sent you the updated analytics report.',
+          timestamp: '2d ago',
+          isFromMe: false,
+        },
+      ],
+    },
+  ]);
+
+  // Helper to build a mock profile object from user data
+  const buildProfile = (user: any) => ({
+    id: user.id?.toString() || '',
+    name: user.name || '',
+    title: user.title || 'Professional',
+    company: user.company || '',
+    avatar: user.avatar,
+    mutualConnections: 12,
+    isOnline: user.isOnline || false,
+    isConnected: false,
+    isPending: false,
+    location: 'San Francisco, CA',
+    about: 'Experienced professional passionate about networking and growth.',
+    experience: [
+      { id: '1', title: 'Senior Developer', company: user.company || 'Company', duration: '2 yrs', description: 'Worked on various projects.' }
+    ],
+    education: [
+      { id: '1', degree: 'B.Sc. Computer Science', school: 'University', year: '2018' }
+    ],
+    skills: ['Networking', 'React Native', 'Leadership'],
+  });
+
+  const handleProfilePress = (user: any) => {
+    setSelectedProfile(buildProfile(user));
+    setProfileModalVisible(true);
+  };
+
+  const handleConversationPress = (conversation: Conversation) => {
+    // Mark conversation as read by setting unreadCount to 0
+    setConversations(prevConversations =>
+      prevConversations.map(conv =>
+        conv.id === conversation.id
+          ? { ...conv, unreadCount: 0 }
+          : conv
+      )
+    );
+    
+    // If we're on the unread filter and this was the last unread message,
+    // switch back to 'all' filter to show the conversation
+    if (selectedFilter === 'unread' && conversation.unreadCount > 0) {
+      const remainingUnread = conversations.filter(conv => 
+        conv.id !== conversation.id && conv.unreadCount > 0
+      ).length;
+      if (remainingUnread === 0) {
+        setSelectedFilter('all');
+      }
+    }
+    
+    setSelectedConversation(conversation);
+    setMessageModalVisible(true);
+  };
+
+  const filteredConversations = conversations.filter(conversation => {
+    const matchesSearch = conversation.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                         conversation.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                         conversation.company.toLowerCase().includes(searchQuery.toLowerCase());
+    
+    if (selectedFilter === 'unread') {
+      return matchesSearch && conversation.unreadCount > 0;
+    } else if (selectedFilter === 'pinned') {
+      return matchesSearch && conversation.isPinned;
+    }
+    
+    return matchesSearch;
+  });
+
+  const renderConversation = ({ item }: { item: Conversation }) => (
+    <View style={[
+      styles.conversationItem,
+      { 
+        backgroundColor: item.unreadCount > 0 ? theme.primaryColor + '10' : theme.cardColor,
+        borderBottomColor: theme.borderColor 
+      }
+    ]}>
+      <TouchableOpacity
+        style={styles.conversationContent}
+        onPress={() => handleConversationPress(item)}
+        activeOpacity={0.7}
+      >
+        <View style={styles.avatarContainer}>
+          <TouchableOpacity onPress={() => handleProfilePress(item)}>
+            <Image source={item.avatar} style={styles.avatar} />
+          </TouchableOpacity>
+          {item.isOnline && <View style={styles.onlineIndicator} />}
+          {item.isPinned && (
+            <View style={[styles.pinIndicator, { backgroundColor: theme.primaryColor }]}>
+              <MaterialCommunityIcons name="pin" size={8} color="#fff" />
+            </View>
+          )}
+        </View>
+        
+        <View style={styles.conversationDetails}>
+          <View style={styles.conversationHeader}>
+            <Text style={[styles.conversationName, { color: theme.textColor }]}>
+              {item.name}
+            </Text>
+            <Text style={[styles.timestamp, { color: theme.textSecondaryColor }]}>
+              {item.timestamp}
+            </Text>
+          </View>
+          
+          <Text style={[styles.conversationTitle, { color: theme.textSecondaryColor }]}>
+            {item.title} at {item.company}
+          </Text>
+          
+          <View style={styles.messageContainer}>
+            <Text 
+              style={[
+                styles.lastMessage, 
+                { 
+                  color: item.unreadCount > 0 ? theme.textColor : theme.textSecondaryColor,
+                  fontWeight: item.unreadCount > 0 ? '600' : '400'
+                }
+              ]}
+              numberOfLines={1}
+            >
+              {item.lastMessage}
+            </Text>
+            
+            {item.unreadCount > 0 && (
+              <View 
+                style={[
+                  styles.unreadBadge, 
+                  { 
+                    backgroundColor: theme.primaryColor,
+                    opacity: item.unreadCount > 0 ? 1 : 0,
+                  }
+                ]}
+              >
+                <Text style={styles.unreadCount}>{item.unreadCount}</Text>
+              </View>
+            )}
+          </View>
+        </View>
+      </TouchableOpacity>
+    </View>
+  );
+
+  const renderFilterButton = (filter: 'all' | 'unread' | 'pinned', label: string, icon: string) => (
+    <TouchableOpacity
+      style={[
+        styles.filterButton,
+        { 
+          backgroundColor: selectedFilter === filter ? theme.primaryColor : theme.surfaceColor,
+          borderColor: theme.borderColor
+        }
+      ]}
+      onPress={() => setSelectedFilter(filter)}
+    >
+      <MaterialCommunityIcons 
+        name={icon as any} 
+        size={16} 
+        color={selectedFilter === filter ? '#fff' : theme.textSecondaryColor} 
+      />
+      <Text style={[
+        styles.filterButtonText,
+        { color: selectedFilter === filter ? '#fff' : theme.textSecondaryColor }
+      ]}>
+        {label}
+      </Text>
+    </TouchableOpacity>
+  );
+
+  return (
+    <View style={[styles.container, { backgroundColor: theme.backgroundColor }]}>
+      {/* Header */}
+      <View style={[styles.header, { backgroundColor: theme.surfaceColor }]}>
+        <View style={styles.headerTop}>
+          <View style={styles.headerLeft}>
+            <Image 
+              source={userAvatar ? { uri: userAvatar } : require('@/assets/images/Avator-Image.jpg')} 
+              style={[styles.profilePicture, { borderColor: theme.primaryColor }]} 
+            />
+            <Text style={[styles.headerTitle, { color: theme.textColor }]}>Messages</Text>
+          </View>
+          
+          <View style={styles.headerActions}>
+            <TouchableOpacity style={styles.headerButton}>
+              <MaterialCommunityIcons name="magnify" size={24} color={theme.textColor} />
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.headerButton}>
+              <MaterialCommunityIcons name="plus" size={24} color={theme.textColor} />
+            </TouchableOpacity>
+          </View>
+        </View>
+
+        {/* Search */}
+        <View style={[styles.searchContainer, { backgroundColor: theme.inputBackgroundColor }]}>
+          <MaterialCommunityIcons name="magnify" size={20} color={theme.textSecondaryColor} />
+          <TextInput
+            style={[styles.searchInput, { color: theme.textColor }]}
+            placeholder="Search messages..."
+            placeholderTextColor={theme.placeholderColor}
+            value={searchQuery}
+            onChangeText={setSearchQuery}
+          />
+        </View>
+
+        {/* Filters */}
+        <View style={styles.filtersContainer}>
+          {renderFilterButton('all', 'All', 'message-text')}
+          {renderFilterButton('unread', 'Unread', 'email-outline')}
+          {renderFilterButton('pinned', 'Pinned', 'pin')}
+        </View>
+      </View>
+
+      {/* Conversations List */}
+      <FlatList
+        data={filteredConversations}
+        renderItem={renderConversation}
+        keyExtractor={(item) => item.id}
+        style={styles.conversationsList}
+        showsVerticalScrollIndicator={false}
+        ListEmptyComponent={
+          <View style={styles.emptyState}>
+            <MaterialCommunityIcons 
+              name="message-text-outline" 
+              size={48} 
+              color={theme.textSecondaryColor} 
+            />
+            <Text style={[styles.emptyStateText, { color: theme.textSecondaryColor }]}>
+              {searchQuery ? 'No conversations found' : 'No messages yet'}
+            </Text>
+            {!searchQuery && (
+              <Text style={[styles.emptyStateSubtext, { color: theme.textTertiaryColor }]}>
+                Start a conversation with your connections
+              </Text>
+            )}
+          </View>
+        }
+      />
+
+      {/* Message Modal */}
+      {selectedConversation && (
+        <MessageModal
+          visible={messageModalVisible}
+          onClose={() => {
+            setMessageModalVisible(false);
+            setSelectedConversation(null);
+          }}
+          conversation={{
+            id: selectedConversation.id,
+            contactName: selectedConversation.name,
+            contactAvatar: selectedConversation.avatar,
+            contactTitle: selectedConversation.title,
+            contactCompany: selectedConversation.company,
+            isOnline: selectedConversation.isOnline,
+            messages: selectedConversation.messages,
+          }}
+        />
+      )}
+      {/* Profile Modal */}
+      {selectedProfile && (
+        <ProfileModal
+          visible={profileModalVisible}
+          onClose={() => setProfileModalVisible(false)}
+          profile={selectedProfile}
+        />
+      )}
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
+  header: {
+    paddingTop: 25,
+    paddingHorizontal: 20,
+    paddingBottom: 16,
+  },
+  headerTop: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  headerLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  profilePicture: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    borderWidth: 2,
+    marginRight: 12,
+  },
+  headerTitle: {
+    fontSize: 24,
+    fontWeight: '700',
+  },
+  headerActions: {
+    flexDirection: 'row',
+  },
+  headerButton: {
+    padding: 8,
+    marginLeft: 8,
+  },
+  searchContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderRadius: 12,
+    paddingHorizontal: 12,
+    height: 44,
+    marginBottom: 16,
+  },
+  searchInput: {
+    flex: 1,
+    marginLeft: 8,
+    fontSize: 16,
+  },
+  filtersContainer: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  filterButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 20,
+    borderWidth: 1,
+  },
+  filterButtonText: {
+    marginLeft: 6,
+    fontSize: 14,
+    fontWeight: '500',
+  },
+  conversationsList: {
+    flex: 1,
+  },
+  conversationItem: {
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+    borderBottomWidth: 1,
+  },
+  conversationContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  avatarContainer: {
+    position: 'relative',
+    marginRight: 12,
+  },
+  avatar: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+  },
+  onlineIndicator: {
+    position: 'absolute',
+    bottom: 2,
+    right: 2,
+    width: 12,
+    height: 12,
+    borderRadius: 6,
+    backgroundColor: '#4CAF50',
+    borderWidth: 2,
+    borderColor: '#fff',
+  },
+  pinIndicator: {
+    position: 'absolute',
+    top: 2,
+    left: 2,
+    width: 16,
+    height: 16,
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  conversationDetails: {
+    flex: 1,
+  },
+  conversationHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 4,
+  },
+  conversationName: {
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  timestamp: {
+    fontSize: 12,
+  },
+  conversationTitle: {
+    fontSize: 14,
+    marginBottom: 8,
+  },
+  messageContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  lastMessage: {
+    flex: 1,
+    fontSize: 14,
+    marginRight: 8,
+  },
+  unreadBadge: {
+    minWidth: 20,
+    height: 20,
+    borderRadius: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 6,
+  },
+  unreadCount: {
+    color: '#fff',
+    fontSize: 12,
+    fontWeight: '600',
+  },
+  emptyState: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingVertical: 60,
+  },
+  emptyStateText: {
+    fontSize: 18,
+    fontWeight: '600',
+    marginTop: 16,
+    textAlign: 'center',
+  },
+  emptyStateSubtext: {
+    fontSize: 14,
+    marginTop: 8,
+    textAlign: 'center',
+  },
+}); 

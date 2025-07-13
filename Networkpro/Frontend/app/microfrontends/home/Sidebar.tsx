@@ -1,0 +1,153 @@
+import React, { useState } from 'react';
+import { View, Text, StyleSheet, Image, TouchableOpacity, Dimensions } from 'react-native';
+import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
+import { useCurrentTheme } from '../../../contexts/ThemeContext';
+import SettingScreen from './SettingScreen';
+
+const { width, height } = Dimensions.get('window');
+
+interface SidebarProps {
+  userAvatar?: string | null;
+  onClose: () => void;
+}
+
+const sidebarItems = [
+  { label: 'Home', icon: 'home-variant', active: true },
+  { label: 'Me', icon: 'account-circle-outline' },
+  { label: 'Discover', icon: 'compass-outline' },
+  { label: 'Messages', icon: 'message-outline' },
+  { label: 'Settings', icon: 'cog-outline' },
+];
+
+export default function Sidebar({ userAvatar, onClose }: SidebarProps) {
+  const theme = useCurrentTheme();
+  const [showSettings, setShowSettings] = useState(false);
+
+  return (
+    <View style={styles.overlay}>
+      {/* Semi-transparent backdrop */}
+      <TouchableOpacity style={[styles.backdrop, { backgroundColor: theme.overlayColor }]} onPress={onClose} activeOpacity={1} />
+      
+      {/* Settings Screen - Full Screen Overlay */}
+      {showSettings && (
+        <View style={styles.fullScreenOverlay}>
+          <SettingScreen userAvatar={userAvatar} onClose={() => setShowSettings(false)} />
+        </View>
+      )}
+      
+      {/* Sidebar - Only show when settings is not active */}
+      {!showSettings && (
+        <View style={[styles.sidebar, { backgroundColor: theme.surfaceColor }]}>
+          <TouchableOpacity style={[styles.closeBtn, { backgroundColor: theme.cardColor }]} onPress={onClose}>
+            <MaterialCommunityIcons name="close" size={24} color={theme.textSecondaryColor} />
+          </TouchableOpacity>
+          
+          <TouchableOpacity style={[styles.profilePicWrap, { borderColor: theme.primaryColor }]}>
+            <Image source={userAvatar ? { uri: userAvatar } : require('@/assets/images/Avator-Image.jpg')} style={styles.profilePic} />
+          </TouchableOpacity>
+          
+          <View style={styles.sidebarNav}>
+            {sidebarItems.map((item) => (
+              <TouchableOpacity
+                key={item.label}
+                style={[
+                  styles.sidebarItem, 
+                  { backgroundColor: item.active ? theme.cardColor : 'transparent' }
+                ]}
+                onPress={item.label === 'Settings' ? () => setShowSettings(true) : undefined}
+              >
+                <MaterialCommunityIcons 
+                  name={item.icon as any} 
+                  size={26} 
+                  color={item.active ? theme.primaryColor : theme.textSecondaryColor} 
+                />
+                <Text style={[
+                  styles.sidebarLabel, 
+                  { color: item.active ? theme.primaryColor : theme.textSecondaryColor },
+                  item.active && { fontWeight: 'bold' }
+                ]}>
+                  {item.label}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+        </View>
+      )}
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  overlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    zIndex: 1000,
+  },
+  backdrop: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    zIndex: 999,
+  },
+  fullScreenOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    zIndex: 1002,
+  },
+  sidebar: {
+    width: 280,
+    height: '100%',
+    paddingTop: 32,
+    paddingBottom: 24,
+    paddingHorizontal: 16,
+    shadowColor: '#000',
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+    elevation: 8,
+    zIndex: 1001,
+  },
+  closeBtn: {
+    position: 'absolute',
+    top: 12,
+    right: 12,
+    zIndex: 10,
+    borderRadius: 20,
+    padding: 4,
+  },
+  profilePicWrap: {
+    marginBottom: 32,
+    borderWidth: 2,
+    borderRadius: 32,
+    padding: 2,
+    alignSelf: 'center',
+  },
+  profilePic: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+  },
+  sidebarNav: {
+    flex: 1,
+  },
+  sidebarItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 16,
+    paddingHorizontal: 16,
+    borderRadius: 12,
+    marginBottom: 8,
+    gap: 16,
+  },
+  sidebarLabel: {
+    fontSize: 18,
+    fontWeight: '500',
+  },
+}); 
