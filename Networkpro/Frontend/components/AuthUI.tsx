@@ -1,5 +1,5 @@
 import React from 'react';
-import { TextInput, TouchableOpacity, Text, StyleSheet, View, TextInputProps, GestureResponderEvent, StyleProp, ViewStyle, TextStyle, Platform } from 'react-native';
+import { TextInput, TouchableOpacity, Text, StyleSheet, View, TextInputProps, GestureResponderEvent, StyleProp, ViewStyle, TextStyle, Platform, ActivityIndicator } from 'react-native';
 
 interface AuthInputProps extends TextInputProps {
   style?: StyleProp<TextStyle>;
@@ -19,12 +19,17 @@ interface AuthButtonProps {
   children: React.ReactNode;
   onPress: (event: GestureResponderEvent) => void;
   style?: StyleProp<ViewStyle>;
+  loading?: boolean;
 }
 
-export function AuthButton({ children, onPress, style }: AuthButtonProps) {
+export function AuthButton({ children, onPress, style, loading = false }: AuthButtonProps) {
   return (
-    <TouchableOpacity style={[styles.button, style]} onPress={onPress}>
-      <Text style={styles.buttonText}>{children}</Text>
+    <TouchableOpacity style={[styles.button, style, loading && { opacity: 0.5 }]} onPress={onPress} disabled={loading}>
+      {loading ? (
+        <ActivityIndicator color="#fff" />
+      ) : (
+        <Text style={styles.buttonText}>{children}</Text>
+      )}
     </TouchableOpacity>
   );
 }

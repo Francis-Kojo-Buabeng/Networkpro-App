@@ -21,7 +21,21 @@ interface ForgotPasswordScreenProps {
   onResetPassword: (email: string) => Promise<void>;
 }
 
-export default function ForgotPasswordScreen({ onBack, onResetPassword }: ForgotPasswordScreenProps) {
+const defaultOnResetPassword = async (email: string) => {
+  const response = await fetch(
+    `http://10.232.142.14:8090/api/v1/authentication/send-password-reset-token?email=${encodeURIComponent(email)}`,
+    {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+    }
+  );
+  if (!response.ok) {
+    const data = await response.json().catch(() => ({}));
+    throw new Error(data.message || 'Failed to send reset email.');
+  }
+};
+
+export default function ForgotPasswordScreen({ onBack, onResetPassword = defaultOnResetPassword }: ForgotPasswordScreenProps) {
   const theme = useCurrentTheme();
   const [email, setEmail] = useState('');
   const [isLoading, setIsLoading] = useState(false);

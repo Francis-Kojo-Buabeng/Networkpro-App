@@ -19,15 +19,46 @@ export default function SignUpScreen({ onContinue, onBack, onSignIn }: SignUpScr
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [agreed, setAgreed] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState(false);
 
-  const handleSignUp = () => {
-    console.log('SignUpScreen: handleSignUp called');
+  const handleSignUp = async () => {
+    setError(null);
     if (!agreed) {
-      console.log('SignUpScreen: Terms not agreed');
+      setError('You must agree to the Terms and Privacy Policy.');
       return;
     }
-    console.log('SignUpScreen: Calling onContinue');
-    onContinue();
+    if (!email || !password || !confirmPassword) {
+      setError('Please fill in all fields.');
+      return;
+    }
+    if (password !== confirmPassword) {
+      setError('Passwords do not match.');
+      return;
+    }
+    setLoading(true);
+    try {
+      const response = await fetch('http://10.232.142.14:8090/api/v1/authentication/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password }),
+      });
+      const data = await response.json();
+      if (response.ok) {
+        setSuccess(true);
+        setTimeout(() => {
+          setSuccess(false);
+          onContinue();
+        }, 1500);
+      } else {
+        setError(data.message || 'Registration failed.');
+      }
+    } catch (err: any) {
+      setError(err.message || 'Network error.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleBack = () => {
@@ -113,13 +144,23 @@ export default function SignUpScreen({ onContinue, onBack, onSignIn }: SignUpScr
               <Text style={[styles.linkText, { color: theme.primaryColor }]}>Privacy Policy</Text>
             </Text>
           </View>
+          {/* Error Message */}
+          {error && (
+            <Text style={{ color: 'red', marginBottom: 12 }}>{error}</Text>
+          )}
+          {/* Success Message */}
+          {success && (
+            <Text style={{ color: 'green', marginBottom: 12 }}>Registration successful!</Text>
+          )}
           {/* Sign Up Button */}
           <TouchableOpacity
-            style={[styles.signUpButton, { backgroundColor: theme.primaryColor }, !agreed && { opacity: 0.5 }]}
+            style={[styles.signUpButton, { backgroundColor: theme.primaryColor }, (!agreed || loading) && { opacity: 0.5 }]}
             onPress={handleSignUp}
-            disabled={!agreed}
+            disabled={!agreed || loading}
           >
-            <Text style={[styles.signUpButtonText, { color: theme.textColor }]}>Sign up</Text>
+            <Text style={[styles.signUpButtonText, { color: theme.textColor }]}>
+              {loading ? 'Signing up...' : 'Sign up'}
+            </Text>
           </TouchableOpacity>
           {/* Sign In Link */}
           <View style={styles.signInRow}>
