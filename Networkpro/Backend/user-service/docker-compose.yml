@@ -1,0 +1,38 @@
+version: '3.8'
+
+services:
+  user-service:
+    build: .
+    ports:
+      - "8091:8091"
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/networkpro_user_service
+      - SPRING_DATASOURCE_USERNAME=accomplish
+      - SPRING_DATASOURCE_PASSWORD=password
+      - SPRING_PROFILES_ACTIVE=docker
+    depends_on:
+      - postgres
+    networks:
+      - networkpro-network
+    restart: unless-stopped
+
+  postgres:
+    image: postgres:15.5
+    environment:
+      - POSTGRES_DB=networkpro_user_service
+      - POSTGRES_USER=accomplish
+      - POSTGRES_PASSWORD=password
+    ports:
+      - "5454:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - networkpro-network
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+
+networks:
+  networkpro-network:
+    driver: bridge 
