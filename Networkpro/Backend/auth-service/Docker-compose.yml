@@ -1,9 +1,9 @@
-version: '3.8'
+
 
 services:
   db:
-    container_name: linkedin-container
-    image: postgres:latest
+    container_name: networkpro-auth-container
+    image: postgres:15
     environment:
       POSTGRES_USER: accomplish
       POSTGRES_PASSWORD: password
@@ -18,7 +18,7 @@ services:
 
   mailhog:
     image: mailhog/mailhog
-    container_name: mailhog
+    container_name: mailhog_container
     ports:
       - "1025:1025"   # SMTP
       - "8025:8025"   # Web UI

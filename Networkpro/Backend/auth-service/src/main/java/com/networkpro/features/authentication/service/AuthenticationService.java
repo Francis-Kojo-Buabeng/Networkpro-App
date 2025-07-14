@@ -90,7 +90,8 @@ public class AuthenticationService {
 
 
     public AuthenticationResponseBody login( AuthenticationRequestBody registerRequestBody) {
-        AuthenticationUser user = authenticationUserRepository.findByEmail(registerRequestBody.getEmail()).orElseThrow(()-> new IllegalAccessError("User not found"));
+        AuthenticationUser user = authenticationUserRepository.findByEmail(registerRequestBody.getEmail())
+            .orElseThrow(() -> new IllegalArgumentException("User not found. Please sign up first."));
 
         if(!encoder.matches(registerRequestBody.getPassword(), user.getPassword())){
             throw new IllegalArgumentException("Passwords is incorrect");
