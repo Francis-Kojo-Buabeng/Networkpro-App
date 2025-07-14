@@ -1,0 +1,53 @@
+# Node modules
+node_modules/
+
+# Build outputs
+dist/
+build/
+
+# Expo/React Native
+.expo/
+.expo-shared/
+
+# Environment variables
+.env
+.env.*
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Editor/IDE
+.vscode/
+.idea/
+
+# Cache
+.cache/
+.parcel-cache/
+coverage/
+
+# Personal screenshots or temp files
+Screenshot_*.jpg
+*.tmp
+
+# Unused or archive images (if you create such a folder)
+unused-images/
+archive/
+
+# Unused images in assets/images root (not profile-pictures/)
+assets/images/image-01.jpg
+assets/images/image-02.webp
+assets/images/image-03.jpg
+assets/images/image-04.jpeg
+assets/images/image-05.avif
+assets/images/image-06.webp
+assets/images/image-07.jpg
+
+# Misc
+*.bak
+*.swp
