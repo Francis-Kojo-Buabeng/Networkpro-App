@@ -21,7 +21,7 @@ public class UserProfileService {
 
     // Create new user profile
     public UserProfile createUserProfile(UserProfile userProfile) {
-        log.info("Creating new user profile for email: {}", userProfile.getEmail());
+        log.info("Creating new user profile");
         return userProfileRepository.save(userProfile);
     }
 
@@ -29,12 +29,6 @@ public class UserProfileService {
     public Optional<UserProfile> getUserProfileById(Long id) {
         log.info("Fetching user profile with ID: {}", id);
         return userProfileRepository.findById(id);
-    }
-
-    // Get user profile by email
-    public Optional<UserProfile> getUserProfileByEmail(String email) {
-        log.info("Fetching user profile for email: {}", email);
-        return userProfileRepository.findByEmail(email);
     }
 
     // Update user profile
@@ -72,11 +66,6 @@ public class UserProfileService {
     public void deleteUserProfile(Long id) {
         log.info("Deleting user profile with ID: {}", id);
         userProfileRepository.deleteById(id);
-    }
-
-    // Check if email exists
-    public boolean emailExists(String email) {
-        return userProfileRepository.existsByEmail(email);
     }
 
     // Search public profiles

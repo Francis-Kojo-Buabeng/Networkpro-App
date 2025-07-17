@@ -6,8 +6,10 @@ services:
     ports:
       - "8091:8091"
     environment:
-      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5454/networkpro_user_service
-      - SPRING_DATASOURCE_USERNAME=accomplish
+
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/networkpro_user_service
+      - SPRING_DATASOURCE_USERNAME=user_service
+
       - SPRING_DATASOURCE_PASSWORD=password
       - SPRING_PROFILES_ACTIVE=docker
     depends_on:
@@ -20,10 +22,10 @@ services:
     image: postgres:15
     environment:
       - POSTGRES_DB=networkpro_user_service
-      - POSTGRES_USER=accomplish
+      - POSTGRES_USER=user_service
       - POSTGRES_PASSWORD=password
     ports:
-      - "5454:5432"
+      - "5455:5432"  # Host access to DB (e.g., pgAdmin or DBeaver)
     volumes:
       - postgres_data:/var/lib/postgresql/data
     networks:
@@ -35,4 +37,4 @@ volumes:
 
 networks:
   networkpro-network:
-    driver: bridge 
+    driver: bridge

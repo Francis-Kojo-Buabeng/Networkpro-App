@@ -21,12 +21,21 @@ export default function SignUpScreen({ onContinue, onBack, onSignIn }: SignUpScr
   const [agreed, setAgreed] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState(false);
+
+
+  const getBackendUrl = () => {
+    // For all devices (Expo Go, emulator, web), use your PC's IP address
+    return 'http://10.232.142.14:8090/api/v1/authentication/register';
+  };
 
   const handleSignUp = async () => {
+    console.log('handleSignUp called');
     setError(null);
+    const url = getBackendUrl();
+    console.log('Sign up URL:', url);
     if (!agreed) {
-      setError('You must agree to the Terms and Privacy Policy.');
+      setError('You must agree to the terms and privacy policy.');
+
       return;
     }
     if (!email || !password || !confirmPassword) {
@@ -39,25 +48,25 @@ export default function SignUpScreen({ onContinue, onBack, onSignIn }: SignUpScr
     }
     setLoading(true);
     try {
-      const response = await fetch('http://10.232.142.14:8090/api/v1/authentication/register', {
+
+      const response = await fetch(url, {
+
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password }),
       });
-      const data = await response.json();
-      if (response.ok) {
-        setSuccess(true);
-        setTimeout(() => {
-          setSuccess(false);
-          onContinue();
-        }, 1500);
-      } else {
-        setError(data.message || 'Registration failed.');
+
+      if (!response.ok) {
+        const data = await response.json().catch(() => ({}));
+        throw new Error(data.message || 'Sign up failed.');
       }
-    } catch (err: any) {
-      setError(err.message || 'Network error.');
-    } finally {
       setLoading(false);
+      onContinue();
+    } catch (err: any) {
+      setLoading(false);
+      setError(err.message || 'Network request failed');
+      console.log('Sign up error:', err);
+
     }
   };
 
@@ -82,97 +91,95 @@ export default function SignUpScreen({ onContinue, onBack, onSignIn }: SignUpScr
           contentContainerStyle={styles.centeredContent}
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
-        >
-          {/* App Icon */}
-          <ThemedLogo style={styles.logo} resizeMode="contain" />
-          {/* Title */}
-          <Text style={[styles.title, { color: theme.textColor }]}>Sign up to{`\n`}NetworkPro</Text>
-          {/* Email Input */}
-          <TextInput
-            style={[styles.input, { backgroundColor: theme.inputBackgroundColor, color: theme.textColor }]}
-            placeholder="Email address"
-            placeholderTextColor={theme.placeholderColor}
-            value={email}
-            onChangeText={setEmail}
-            autoCapitalize="none"
-            keyboardType="email-address"
-          />
-          {/* Password Input */}
-          <View style={styles.inputRow}>
-            <TextInput
-              style={[styles.input, { flex: 1, marginBottom: 0, backgroundColor: theme.inputBackgroundColor, color: theme.textColor }]}
-              placeholder="Password"
-              placeholderTextColor={theme.placeholderColor}
-              value={password}
-              onChangeText={setPassword}
-              secureTextEntry={!showPassword}
-            />
-            <TouchableOpacity onPress={() => setShowPassword(!showPassword)} style={styles.eyeButton}>
-              <Ionicons
-                name={showPassword ? 'eye' : 'eye-off'}
-                size={24}
-                color="gray"
-              />
-            </TouchableOpacity>
-          </View>
-          {/* Confirm Password Input */}
-          <View style={styles.inputRow}>
-            <TextInput
-              style={[styles.input, { flex: 1, marginBottom: 0, backgroundColor: theme.inputBackgroundColor, color: theme.textColor }]}
-              placeholder="Confirm password"
-              placeholderTextColor={theme.placeholderColor}
-              value={confirmPassword}
-              onChangeText={setConfirmPassword}
-              secureTextEntry={!showConfirmPassword}
-            />
-            <TouchableOpacity onPress={() => setShowConfirmPassword(!showConfirmPassword)} style={styles.eyeButton}>
-              <Ionicons
-                name={showConfirmPassword ? 'eye' : 'eye-off'}
-                size={24}
-                color="gray"
-              />
-            </TouchableOpacity>
-          </View>
-          {/* Terms and Privacy Policy */}
-          <View style={styles.checkboxRow}>
-            <TouchableOpacity onPress={() => setAgreed(!agreed)} style={[styles.checkbox, { borderColor: theme.textColor }]}>
-              {agreed && <View style={[styles.checkboxChecked, { backgroundColor: theme.primaryColor }]} />}
-            </TouchableOpacity>
-            <Text style={[styles.checkboxText, { color: theme.textColor }]}>
-              I agree to the{' '}
-              <Text style={[styles.linkText, { color: theme.primaryColor }]}>Terms</Text> and{' '}
-              <Text style={[styles.linkText, { color: theme.primaryColor }]}>Privacy Policy</Text>
-            </Text>
-          </View>
-          {/* Error Message */}
-          {error && (
-            <Text style={{ color: 'red', marginBottom: 12 }}>{error}</Text>
-          )}
-          {/* Success Message */}
-          {success && (
-            <Text style={{ color: 'green', marginBottom: 12 }}>Registration successful!</Text>
-          )}
-          {/* Sign Up Button */}
-          <TouchableOpacity
-            style={[styles.signUpButton, { backgroundColor: theme.primaryColor }, (!agreed || loading) && { opacity: 0.5 }]}
-            onPress={handleSignUp}
-            disabled={!agreed || loading}
           >
-            <Text style={[styles.signUpButtonText, { color: theme.textColor }]}>
-              {loading ? 'Signing up...' : 'Sign up'}
-            </Text>
+        {/* App Icon */}
+        <ThemedLogo style={styles.logo} resizeMode="contain" />
+        {/* Title */}
+        <Text style={[styles.title, { color: theme.textColor }]}>Sign up to{`\n`}NetworkPro</Text>
+        {/* Email Input */}
+        <TextInput
+          style={[styles.input, { backgroundColor: theme.inputBackgroundColor, color: theme.textColor }]}
+          placeholder="Email address"
+          placeholderTextColor={theme.placeholderColor}
+          value={email}
+          onChangeText={setEmail}
+          autoCapitalize="none"
+          keyboardType="email-address"
+        />
+        {/* Password Input */}
+        <View style={styles.inputRow}>
+          <TextInput
+            style={[styles.input, { flex: 1, marginBottom: 0, backgroundColor: theme.inputBackgroundColor, color: theme.textColor }]}
+            placeholder="Password"
+            placeholderTextColor={theme.placeholderColor}
+            value={password}
+            onChangeText={setPassword}
+            secureTextEntry={!showPassword}
+          />
+          <TouchableOpacity onPress={() => setShowPassword(!showPassword)} style={styles.eyeButton}>
+            <Ionicons
+              name={showPassword ? 'eye' : 'eye-off'}
+              size={24}
+              color="gray"
+            />
           </TouchableOpacity>
-          {/* Sign In Link */}
-          <View style={styles.signInRow}>
-            <Text style={[styles.signInText, { color: theme.textColor }]}>Already have an account? </Text>
-            <TouchableOpacity onPress={handleSignIn}>
-              <Text style={[styles.signInLink, { color: theme.primaryColor }]}>Sign in</Text>
-            </TouchableOpacity>
-          </View>
-        </ScrollView>
-      </KeyboardAvoidingView>
-    </View>
-  );
+        </View>
+        {/* Confirm Password Input */}
+        <View style={styles.inputRow}>
+          <TextInput
+            style={[styles.input, { flex: 1, marginBottom: 0, backgroundColor: theme.inputBackgroundColor, color: theme.textColor }]}
+            placeholder="Confirm password"
+            placeholderTextColor={theme.placeholderColor}
+            value={confirmPassword}
+            onChangeText={setConfirmPassword}
+            secureTextEntry={!showConfirmPassword}
+          />
+          <TouchableOpacity onPress={() => setShowConfirmPassword(!showConfirmPassword)} style={styles.eyeButton}>
+            <Ionicons
+              name={showConfirmPassword ? 'eye' : 'eye-off'}
+              size={24}
+              color="gray"
+            />
+
+
+          </TouchableOpacity>
+        </View>
+        {/* Terms and Privacy Policy */}
+        <View style={styles.checkboxRow}>
+          <TouchableOpacity onPress={() => setAgreed(!agreed)} style={[styles.checkbox, { borderColor: theme.textColor }]}>
+            {agreed && <View style={[styles.checkboxChecked, { backgroundColor: theme.primaryColor }]} />}
+          </TouchableOpacity>
+          <Text style={[styles.checkboxText, { color: theme.textColor }]}>
+            I agree to the{' '}
+            <Text style={[styles.linkText, { color: theme.primaryColor }]}>Terms</Text> and{' '}
+            <Text style={[styles.linkText, { color: theme.primaryColor }]}>Privacy Policy</Text>
+          </Text>
+        </View>
+        {error && (
+          <Text style={{ color: 'red', marginBottom: 12 }}>{error}</Text>
+        )}
+        {loading && (
+          <Text style={{ color: theme.textColor, marginBottom: 12 }}>Signing up...</Text>
+        )}
+        {/* Sign Up Button */}
+        <TouchableOpacity
+          style={[styles.signUpButton, { backgroundColor: theme.primaryColor }, !agreed && { opacity: 0.5 }]}
+          onPress={handleSignUp}
+          disabled={!agreed}
+        >
+          <Text style={[styles.signUpButtonText, { color: theme.textColor }]}>Sign up</Text>
+        </TouchableOpacity>
+        {/* Sign In Link */}
+        <View style={styles.signInRow}>
+          <Text style={[styles.signInText, { color: theme.textColor }]}>Already have an account? </Text>
+          <TouchableOpacity onPress={handleSignIn}>
+            <Text style={[styles.signInLink, { color: theme.primaryColor }]}>Sign in</Text>
+          </TouchableOpacity>
+        </View>
+      </ScrollView>
+    </KeyboardAvoidingView>
+  </View>
+);
 }
 
 const styles = StyleSheet.create({
