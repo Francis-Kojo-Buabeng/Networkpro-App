@@ -1,4 +1,4 @@
-version: '3.8'
+
 
 services:
   user-service:
@@ -6,7 +6,7 @@ services:
     ports:
       - "8091:8091"
     environment:
-      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/networkpro_user_service
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5454/networkpro_user_service
       - SPRING_DATASOURCE_USERNAME=accomplish
       - SPRING_DATASOURCE_PASSWORD=password
       - SPRING_PROFILES_ACTIVE=docker
@@ -17,7 +17,7 @@ services:
     restart: unless-stopped
 
   postgres:
-    image: postgres:15.5
+    image: postgres:15
     environment:
       - POSTGRES_DB=networkpro_user_service
       - POSTGRES_USER=accomplish
