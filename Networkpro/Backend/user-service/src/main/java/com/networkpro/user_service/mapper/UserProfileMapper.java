@@ -11,12 +11,9 @@ public class UserProfileMapper {
 
     public UserProfileDto toDto(UserProfile userProfile) {
         if (userProfile == null) return null;
-        
         return UserProfileDto.builder()
                 .id(userProfile.getId())
-                .firstName(userProfile.getFullName() != null ? userProfile.getFullName().split(" ")[0] : null)
-                .lastName(userProfile.getFullName() != null ? userProfile.getFullName().split(" ").length > 1 ? userProfile.getFullName().split(" ")[1] : null : null)
-                .email(userProfile.getEmail())
+                .fullName(userProfile.getFullName())
                 .headline(userProfile.getHeadline())
                 .summary(userProfile.getBio())
                 .location(userProfile.getLocation())
@@ -24,9 +21,17 @@ public class UserProfileMapper {
                 .profilePictureUrl(userProfile.getProfilePictureUrl())
                 .website(userProfile.getWebsite())
                 .phoneNumber(userProfile.getPhoneNumber())
+                .emailVerified(userProfile.isEmailVerified())
+                .profileCompletionPercentage(userProfile.getProfileCompletionPercentage())
+                .profilePublic(userProfile.isProfilePublic())
+                .contactInfoPublic(userProfile.isContactInfoPublic())
+                .workExperiencePublic(userProfile.isWorkExperiencePublic())
+                .educationPublic(userProfile.isEducationPublic())
+                .skillsPublic(userProfile.isSkillsPublic())
+                .currentPosition(userProfile.getCurrentPosition())
+                .currentCompany(userProfile.getCurrentCompany())
                 .skills(userProfile.getSkills() != null ? userProfile.getSkills().stream().toList() : null)
                 .isProfileComplete(userProfile.getProfileCompletionPercentage() >= 100)
-                .profileCompletionPercentage(userProfile.getProfileCompletionPercentage())
                 .createdAt(userProfile.getProfileCreatedAt())
                 .updatedAt(userProfile.getProfileUpdatedAt())
                 .build();
@@ -34,10 +39,8 @@ public class UserProfileMapper {
 
     public UserProfile toEntity(UserProfileDto dto) {
         if (dto == null) return null;
-        
         UserProfile userProfile = new UserProfile();
-        userProfile.setFullName(dto.getFirstName() + " " + dto.getLastName());
-        userProfile.setEmail(dto.getEmail());
+        userProfile.setFullName(dto.getFullName());
         userProfile.setHeadline(dto.getHeadline());
         userProfile.setBio(dto.getSummary());
         userProfile.setLocation(dto.getLocation());
@@ -45,20 +48,37 @@ public class UserProfileMapper {
         userProfile.setProfilePictureUrl(dto.getProfilePictureUrl());
         userProfile.setWebsite(dto.getWebsite());
         userProfile.setPhoneNumber(dto.getPhoneNumber());
+        userProfile.setEmailVerified(dto.isEmailVerified());
+        userProfile.setProfilePublic(dto.isProfilePublic());
+        userProfile.setContactInfoPublic(dto.isContactInfoPublic());
+        userProfile.setWorkExperiencePublic(dto.isWorkExperiencePublic());
+        userProfile.setEducationPublic(dto.isEducationPublic());
+        userProfile.setSkillsPublic(dto.isSkillsPublic());
+        userProfile.setCurrentPosition(dto.getCurrentPosition());
+        userProfile.setCurrentCompany(dto.getCurrentCompany());
+        if (dto.getSkills() != null) userProfile.setSkills(new java.util.HashSet<>(dto.getSkills()));
         return userProfile;
     }
 
     public UserProfile toEntity(UserProfileUpdateDto dto) {
         if (dto == null) return null;
-        
         UserProfile userProfile = new UserProfile();
-        userProfile.setFullName(dto.getFirstName() + " " + dto.getLastName());
+        userProfile.setFullName(dto.getFullName());
+        userProfile.setEmail(dto.getEmail());
         userProfile.setHeadline(dto.getHeadline());
         userProfile.setBio(dto.getSummary());
         userProfile.setLocation(dto.getLocation());
         userProfile.setIndustry(dto.getIndustry());
         userProfile.setWebsite(dto.getWebsite());
         userProfile.setPhoneNumber(dto.getPhoneNumber());
+        userProfile.setProfilePublic(dto.isProfilePublic());
+        userProfile.setContactInfoPublic(dto.isContactInfoPublic());
+        userProfile.setWorkExperiencePublic(dto.isWorkExperiencePublic());
+        userProfile.setEducationPublic(dto.isEducationPublic());
+        userProfile.setSkillsPublic(dto.isSkillsPublic());
+        userProfile.setCurrentPosition(dto.getCurrentPosition());
+        userProfile.setCurrentCompany(dto.getCurrentCompany());
+        if (dto.getSkills() != null) userProfile.setSkills(new java.util.HashSet<>(dto.getSkills()));
         return userProfile;
     }
 

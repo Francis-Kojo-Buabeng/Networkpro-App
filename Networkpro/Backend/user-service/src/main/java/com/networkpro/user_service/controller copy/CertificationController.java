@@ -1,4 +1,4 @@
-package com.networkpro.user_service.controller;
+
 
 import com.networkpro.user_service.dto.certification.CertificationDto;
 import com.networkpro.user_service.mapper.CertificationMapper;

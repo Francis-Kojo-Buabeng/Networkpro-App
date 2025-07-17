@@ -47,4 +47,10 @@ public interface EducationRepository extends JpaRepository<Education, Long> {
     // Find education by degree type
     @Query("SELECT e FROM Education e WHERE LOWER(e.degree) LIKE LOWER(CONCAT('%', :degreeType, '%'))")
     List<Education> findByDegreeType(@Param("degreeType") String degreeType);
+
+    // Find education by user and degree
+    List<Education> findByUserProfileIdAndDegreeContainingIgnoreCase(Long userProfileId, String degree);
+
+    // Find education by user and field of study
+    List<Education> findByUserProfileIdAndFieldOfStudyContainingIgnoreCase(Long userProfileId, String fieldOfStudy);
 } 

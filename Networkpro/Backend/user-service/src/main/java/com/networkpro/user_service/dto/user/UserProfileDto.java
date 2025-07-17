@@ -9,9 +9,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.time.LocalDateTime;
 import java.util.List;
-import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
@@ -22,34 +20,34 @@ import jakarta.validation.constraints.Size;
 public class UserProfileDto {
     private Long id;
 
-    @NotBlank(message = "First name is required")
-    @Size(max = 50, message = "First name must be at most 50 characters")
-    private String firstName;
-
-    @NotBlank(message = "Last name is required")
-    @Size(max = 50, message = "Last name must be at most 50 characters")
-    private String lastName;
+    @NotBlank(message = "Full name is required")
+    @Size(max = 100, message = "Full name must be at most 100 characters")
+    private String fullName;
 
     @NotBlank(message = "Email is required")
-    @Email(message = "Email should be valid")
-    private String email;
+  
     private String headline;
     private String summary;
     private String location;
     private String industry;
     private String profilePictureUrl;
-    private String coverPhotoUrl;
     private String website;
     private String phoneNumber;
-    private String dateOfBirth;
-    private String gender;
+    private boolean emailVerified;
+    private int profileCompletionPercentage;
+    private boolean profilePublic;
+    private boolean contactInfoPublic;
+    private boolean workExperiencePublic;
+    private boolean educationPublic;
+    private boolean skillsPublic;
+    private String currentPosition;
+    private String currentCompany;
     private List<String> skills;
     private List<WorkExperienceDto> workExperience;
     private List<EducationDto> education;
     private List<CertificationDto> certifications;
     private PrivacySettingsDto privacySettings;
     private boolean isProfileComplete;
-    private int profileCompletionPercentage;
-    private LocalDateTime createdAt;
-    private LocalDateTime updatedAt;
+    private java.time.LocalDateTime createdAt;
+    private java.time.LocalDateTime updatedAt;
 } 
