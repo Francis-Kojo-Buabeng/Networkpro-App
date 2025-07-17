@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
-import WelcomeScreen from './WelcomeScreen';
-import SignUpScreen from './SignUpScreen';
-import AppNavigator from './AppNavigator';
+import WelcomeScreen from './app/shell/WelcomeScreen';
+import SignUpScreen from './app/shell/SignUpScreen';
+import AppNavigator from './app/shell/AppNavigator';
 
 export default function Router() {
   const [screen, setScreen] = useState<'welcome' | 'signup' | 'main'>('welcome');
@@ -12,10 +12,10 @@ export default function Router() {
   const goToWelcome = () => setScreen('welcome');
 
   if (screen === 'welcome') {
-    return <WelcomeScreen onSignUp={goToSignUp} />;
+    return <WelcomeScreen onSignUp={goToSignUp} onSignIn={goToSignUp} />;
   }
   if (screen === 'signup') {
-    return <SignUpScreen onContinue={goToMain} onBack={goToWelcome} />;
+    return <SignUpScreen onContinue={goToMain} onBack={goToWelcome} onSignIn={goToWelcome} />;
   }
   return <AppNavigator />;
 } 
