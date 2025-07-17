@@ -11,12 +11,17 @@ public class UserProfileMapper {
 
     public UserProfileDto toDto(UserProfile userProfile) {
         if (userProfile == null) return null;
-        
+        String firstName = null;
+        String lastName = null;
+        if (userProfile.getFullName() != null) {
+            String[] parts = userProfile.getFullName().trim().split(" ", 2);
+            firstName = parts[0];
+            lastName = parts.length > 1 ? parts[1] : null;
+        }
         return UserProfileDto.builder()
                 .id(userProfile.getId())
-                .firstName(userProfile.getFullName() != null ? userProfile.getFullName().split(" ")[0] : null)
-                .lastName(userProfile.getFullName() != null ? userProfile.getFullName().split(" ").length > 1 ? userProfile.getFullName().split(" ")[1] : null : null)
-                .email(userProfile.getEmail())
+                .firstName(firstName)
+                .lastName(lastName)
                 .headline(userProfile.getHeadline())
                 .summary(userProfile.getBio())
                 .location(userProfile.getLocation())
@@ -37,7 +42,6 @@ public class UserProfileMapper {
         
         UserProfile userProfile = new UserProfile();
         userProfile.setFullName(dto.getFirstName() + " " + dto.getLastName());
-        userProfile.setEmail(dto.getEmail());
         userProfile.setHeadline(dto.getHeadline());
         userProfile.setBio(dto.getSummary());
         userProfile.setLocation(dto.getLocation());
@@ -45,6 +49,7 @@ public class UserProfileMapper {
         userProfile.setProfilePictureUrl(dto.getProfilePictureUrl());
         userProfile.setWebsite(dto.getWebsite());
         userProfile.setPhoneNumber(dto.getPhoneNumber());
+        userProfile.setProfilePublic(true); // Set public by default
         return userProfile;
     }
 

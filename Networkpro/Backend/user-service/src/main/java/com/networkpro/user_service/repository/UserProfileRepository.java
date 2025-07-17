@@ -7,16 +7,12 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
-import java.util.Optional;
+
 
 @Repository
 public interface UserProfileRepository extends JpaRepository<UserProfile, Long> {
     
-    // Find user by email
-    Optional<UserProfile> findByEmail(String email);
-    
-    // Check if email exists
-    boolean existsByEmail(String email);
+    // Removed findByEmail and existsByEmail as email is no longer part of the entity
     
     // Find users by full name (case-insensitive)
     List<UserProfile> findByFullNameContainingIgnoreCase(String fullName);
