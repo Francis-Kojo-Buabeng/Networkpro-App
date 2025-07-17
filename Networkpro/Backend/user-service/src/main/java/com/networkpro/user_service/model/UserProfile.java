@@ -16,17 +16,11 @@ public class UserProfile {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(unique = true, nullable = false)
-    private String email;
-
-    @Column(nullable = false)
-    private String passwordHash;
-
+    // Removed email and passwordHash fields as they are not needed in user-service
     private String fullName;
     private String bio;
     private String location;
     private String profilePictureUrl;
-    private boolean emailVerified;
     
     // Profile completion tracking
     private int profileCompletionPercentage;

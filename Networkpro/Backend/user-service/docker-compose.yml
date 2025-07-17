@@ -1,4 +1,8 @@
+<<<<<<< HEAD
 version: "3.8"
+=======
+
+>>>>>>> c725ed53c12d29997f15d402a39501f72ae3b4bb
 
 services:
   user-service:
@@ -6,8 +10,13 @@ services:
     ports:
       - "8091:8091"
     environment:
+
       - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/networkpro_user_service
       - SPRING_DATASOURCE_USERNAME=user_service
+<<<<<<< HEAD
+=======
+
+>>>>>>> c725ed53c12d29997f15d402a39501f72ae3b4bb
       - SPRING_DATASOURCE_PASSWORD=password
       - SPRING_PROFILES_ACTIVE=docker
     depends_on:
