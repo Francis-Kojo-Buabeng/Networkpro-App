@@ -103,6 +103,10 @@ public class AuthenticationService {
 
 
     public AuthenticationResponseBody register(AuthenticationRequestBody registerRequestBody) throws MessagingException, UnsupportedEncodingException {
+        // Check if email already exists
+        if (authenticationUserRepository.findByEmail(registerRequestBody.getEmail()).isPresent()) {
+            throw new IllegalArgumentException("An account with this email already exists. Please use a different email or sign in.");
+        }
         AuthenticationUser user = authenticationUserRepository.save(new AuthenticationUser(registerRequestBody.getEmail(), encoder.encode(registerRequestBody.getPassword())));
 
         String emailVerificationToken = generateEmailVerificationToken();

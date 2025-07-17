@@ -23,6 +23,35 @@ export default function SignInScreen({ onSignIn, onJoin, onForgotPassword, onBac
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const handleSignIn = async () => {
+    setError(null);
+    if (!email || !password) {
+      setError('Please enter your email and password.');
+      return;
+    }
+    setLoading(true);
+    try {
+      const response = await fetch('http://10.232.142.14:8090/api/v1/authentication/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password }),
+      });
+      const data = await response.json();
+      if (response.ok) {
+        // You can store token or user info here if needed
+        onSignIn(true); // Assume profile is complete for now
+      } else {
+        setError(data.message || 'Sign in failed.');
+      }
+    } catch (err: any) {
+      setError(err.message || 'Network error.');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <View style={[styles.background, { backgroundColor: theme.backgroundColor }]}>
@@ -90,12 +119,13 @@ export default function SignInScreen({ onSignIn, onJoin, onForgotPassword, onBac
               <Text style={[styles.forgotText, { color: theme.primaryColor }]}>Forgot password?</Text>
             </TouchableOpacity>
           </View>
-          <AuthButton onPress={() => {
-            // For now, we'll assume profile is complete for existing users
-            // In a real app, this would check the user's profile status from the backend
-            const profileComplete = true; // This should come from your auth/backend logic
-            onSignIn(profileComplete);
-          }}>Sign in</AuthButton>
+          {/* Error Message */}
+          {error && (
+            <Text style={{ color: 'red', marginBottom: 12 }}>{error}</Text>
+          )}
+          <AuthButton onPress={handleSignIn} loading={loading}>
+            {loading ? 'Signing in...' : 'Sign in'}
+          </AuthButton>
           <View style={styles.bottomRow}>
             <Text style={[styles.bottomText, { color: theme.textColor }]}>Don't have an account? </Text>
             <TouchableOpacity onPress={onJoin}>

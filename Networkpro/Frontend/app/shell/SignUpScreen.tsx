@@ -22,6 +22,7 @@ export default function SignUpScreen({ onContinue, onBack, onSignIn }: SignUpScr
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+
   const getBackendUrl = () => {
     // For all devices (Expo Go, emulator, web), use your PC's IP address
     return 'http://10.232.142.14:8090/api/v1/authentication/register';
@@ -34,6 +35,7 @@ export default function SignUpScreen({ onContinue, onBack, onSignIn }: SignUpScr
     console.log('Sign up URL:', url);
     if (!agreed) {
       setError('You must agree to the terms and privacy policy.');
+
       return;
     }
     if (!email || !password || !confirmPassword) {
@@ -46,11 +48,14 @@ export default function SignUpScreen({ onContinue, onBack, onSignIn }: SignUpScr
     }
     setLoading(true);
     try {
+
       const response = await fetch(url, {
+
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password }),
       });
+
       if (!response.ok) {
         const data = await response.json().catch(() => ({}));
         throw new Error(data.message || 'Sign up failed.');
@@ -61,6 +66,7 @@ export default function SignUpScreen({ onContinue, onBack, onSignIn }: SignUpScr
       setLoading(false);
       setError(err.message || 'Network request failed');
       console.log('Sign up error:', err);
+
     }
   };
 
@@ -134,6 +140,8 @@ export default function SignUpScreen({ onContinue, onBack, onSignIn }: SignUpScr
               size={24}
               color="gray"
             />
+
+
           </TouchableOpacity>
         </View>
         {/* Terms and Privacy Policy */}
