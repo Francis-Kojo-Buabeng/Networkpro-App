@@ -1,16 +1,16 @@
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import React, { useState } from 'react';
 import {
-  View,
-  Text,
-  TouchableOpacity,
-  StyleSheet,
-  Modal,
-  ScrollView,
-  Image,
-  Dimensions,
-  Alert,
+    Alert,
+    Dimensions,
+    Image,
+    Modal,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View,
 } from 'react-native';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useCurrentTheme } from '../contexts/ThemeContext';
 
 const { width, height } = Dimensions.get('window');
@@ -203,20 +203,20 @@ export default function ProfileModal({
           {/* Experience Section */}
           <View style={[styles.section, { backgroundColor: theme.cardColor }]}>
             <Text style={[styles.sectionTitle, { color: theme.textColor }]}>Experience</Text>
-            {profile.experience.map(renderExperience)}
+            {(profile.experience || []).map(renderExperience)}
           </View>
 
           {/* Education Section */}
           <View style={[styles.section, { backgroundColor: theme.cardColor }]}>
             <Text style={[styles.sectionTitle, { color: theme.textColor }]}>Education</Text>
-            {profile.education.map(renderEducation)}
+            {(profile.education || []).map(renderEducation)}
           </View>
 
           {/* Skills Section */}
           <View style={[styles.section, { backgroundColor: theme.cardColor }]}>
             <Text style={[styles.sectionTitle, { color: theme.textColor }]}>Skills</Text>
             <View style={styles.skillsContainer}>
-              {profile.skills.map(renderSkill)}
+              {(profile.skills || []).map(renderSkill)}
             </View>
           </View>
         </ScrollView>

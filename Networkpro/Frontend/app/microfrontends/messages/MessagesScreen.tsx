@@ -1,19 +1,19 @@
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import React, { useState } from 'react';
 import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  TouchableOpacity,
-  Image,
-  TextInput,
-  FlatList,
   Dimensions,
+  FlatList,
+  Image,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View
 } from 'react-native';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { useCurrentTheme } from '../../../contexts/ThemeContext';
 import MessageModal from '../../../components/MessageModal';
+import NewMessageButton from '../../../components/NewMessageButton';
 import ProfileModal from '../../../components/ProfileModal';
+import { useCurrentTheme } from '../../../contexts/ThemeContext';
 
 const { width } = Dimensions.get('window');
 
@@ -411,38 +411,38 @@ export default function MessagesScreen({ userAvatar }: MessagesScreenProps) {
   return (
     <View style={[styles.container, { backgroundColor: theme.backgroundColor }]}>
       {/* Header */}
-      <View style={[styles.header, { backgroundColor: theme.surfaceColor }]}>
-        <View style={styles.headerTop}>
-          <View style={styles.headerLeft}>
-            <Image 
-              source={userAvatar ? { uri: userAvatar } : require('@/assets/images/Avator-Image.jpg')} 
-              style={[styles.profilePicture, { borderColor: theme.primaryColor }]} 
-            />
-            <Text style={[styles.headerTitle, { color: theme.textColor }]}>Messages</Text>
+      <View style={[styles.header, { backgroundColor: theme.surfaceColor }]}> 
+        <View style={styles.headerTopRow}> 
+          <Image 
+            source={userAvatar ? { uri: userAvatar } : require('@/assets/images/Avator-Image.jpg')} 
+            style={[styles.profilePicture, { borderColor: theme.primaryColor }]} 
+          />
+          <View style={styles.headerSearchWrapper}>
+            <View style={[styles.headerSearchContainer, { backgroundColor: theme.inputBackgroundColor }]}> 
+              <MaterialCommunityIcons name="magnify" size={18} color={theme.textSecondaryColor} />
+              <TextInput
+                style={[styles.headerSearchInput, { color: theme.textColor }]}
+                placeholder="Search..."
+                placeholderTextColor={theme.placeholderColor}
+                value={searchQuery}
+                onChangeText={setSearchQuery}
+                returnKeyType="search"
+              />
+            </View>
           </View>
-          
-          <View style={styles.headerActions}>
-            <TouchableOpacity style={styles.headerButton}>
-              <MaterialCommunityIcons name="magnify" size={24} color={theme.textColor} />
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.headerButton}>
-              <MaterialCommunityIcons name="plus" size={24} color={theme.textColor} />
-            </TouchableOpacity>
-          </View>
-        </View>
-
-        {/* Search */}
-        <View style={[styles.searchContainer, { backgroundColor: theme.inputBackgroundColor }]}>
-          <MaterialCommunityIcons name="magnify" size={20} color={theme.textSecondaryColor} />
-          <TextInput
-            style={[styles.searchInput, { color: theme.textColor }]}
-            placeholder="Search messages..."
-            placeholderTextColor={theme.placeholderColor}
-            value={searchQuery}
-            onChangeText={setSearchQuery}
+          <NewMessageButton 
+            onStartConversation={(contact) => {
+              // Handle starting a new conversation
+              console.log('Starting conversation with:', contact.name);
+            }}
+            onCreateGroup={() => {
+              console.log('Creating new group');
+            }}
+            onBroadcast={() => {
+              console.log('Opening broadcast');
+            }}
           />
         </View>
-
         {/* Filters */}
         <View style={styles.filtersContainer}>
           {renderFilterButton('all', 'All', 'message-text')}
@@ -453,7 +453,7 @@ export default function MessagesScreen({ userAvatar }: MessagesScreenProps) {
 
       {/* Conversations List */}
       <FlatList
-        data={filteredConversations}
+        data={filteredConversations || []}
         renderItem={renderConversation}
         keyExtractor={(item) => item.id}
         style={styles.conversationsList}
@@ -676,5 +676,28 @@ const styles = StyleSheet.create({
     fontSize: 14,
     marginTop: 8,
     textAlign: 'center',
+  },
+  headerTopRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 12,
+  },
+  headerSearchWrapper: {
+    flex: 1,
+    marginHorizontal: 8,
+  },
+  headerSearchContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderRadius: 8,
+    paddingHorizontal: 8,
+    height: 36,
+  },
+  headerSearchInput: {
+    flex: 1,
+    marginLeft: 6,
+    fontSize: 15,
+    paddingVertical: 0,
   },
 }); 

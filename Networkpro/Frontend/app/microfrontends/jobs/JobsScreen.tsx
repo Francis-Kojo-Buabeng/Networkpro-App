@@ -1,54 +1,24 @@
+import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import React, { useState } from 'react';
 import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  TouchableOpacity,
-  TextInput,
-  FlatList,
-  Image,
   Dimensions,
-  Modal,
+  FlatList,
+  StyleSheet,
+  Text,
+  View,
 } from 'react-native';
-import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
-import { useCurrentTheme } from '../../../contexts/ThemeContext';
 import ProfileModal from '../../../components/ProfileModal';
+import { useCurrentTheme } from '../../../contexts/ThemeContext';
+import {
+  CompanyModal,
+  CompanyProfile,
+  Job,
+  JobCard,
+  JobFilters,
+  JobSearchHeader
+} from './components';
 
 const { width } = Dimensions.get('window');
-
-// Types
-interface Job {
-  id: string;
-  title: string;
-  company: string;
-  location: string;
-  salary: string;
-  type: 'Full-time' | 'Part-time' | 'Contract' | 'Internship';
-  postedDate: string;
-  logo: any;
-  description: string;
-  requirements: string[];
-  isSaved: boolean;
-}
-
-interface CompanyProfile {
-  id: string;
-  name: string;
-  logo: any;
-  industry: string;
-  size: string;
-  location: string;
-  founded: string;
-  description: string;
-  website: string;
-  activeJobs: number;
-  employeeCount: string;
-  revenue: string;
-  specialties: string[];
-  benefits: string[];
-  recentJobs: Job[];
-}
 
 // Company logo mapping
 const getCompanyLogo = (companyName: string) => {
@@ -198,7 +168,7 @@ export default function JobsScreen({ userAvatar }: JobsScreenProps) {
       employeeCount: '164,000+',
       revenue: '$394.3B',
       specialties: ['Consumer Electronics', 'Software Development', 'Design', 'Retail'],
-      benefits: ['Health Benefits', 'Stock Options', 'Product Discounts', 'Professional Development'],
+      benefits: ['Health Insurance', '401k Matching', 'Employee Discount', 'Stock Options'],
       recentJobs: mockJobs.filter(job => job.company === 'Apple')
     },
     'Microsoft': {
@@ -214,8 +184,8 @@ export default function JobsScreen({ userAvatar }: JobsScreenProps) {
       activeJobs: 12,
       employeeCount: '221,000+',
       revenue: '$198.3B',
-      specialties: ['Software Development', 'Cloud Services', 'Gaming', 'AI'],
-      benefits: ['Health Insurance', '401k', 'Remote Work', 'Learning Budget'],
+      specialties: ['Software Development', 'Cloud Computing', 'Gaming', 'AI/ML'],
+      benefits: ['Health Insurance', '401k Matching', 'Flexible Work', 'Learning Budget'],
       recentJobs: mockJobs.filter(job => job.company === 'Microsoft')
     },
     'Amazon': {
@@ -229,17 +199,17 @@ export default function JobsScreen({ userAvatar }: JobsScreenProps) {
       description: 'Amazon.com, Inc. is an American multinational technology company focusing on e-commerce, cloud computing, digital streaming, and artificial intelligence.',
       website: 'amazon.com',
       activeJobs: 20,
-      employeeCount: '1.6M+',
+      employeeCount: '1,608,000+',
       revenue: '$514.0B',
       specialties: ['E-commerce', 'Cloud Computing', 'Logistics', 'AI/ML'],
-      benefits: ['Health Benefits', 'Stock Options', 'Career Growth', 'Innovation'],
+      benefits: ['Health Insurance', '401k Matching', 'Stock Options', 'Career Growth'],
       recentJobs: mockJobs.filter(job => job.company === 'Amazon')
     },
     'Netflix': {
       id: '5',
       name: 'Netflix',
       logo: require('@/assets/images/company-logos/Netflix-logo.png'),
-      industry: 'Entertainment',
+      industry: 'Entertainment & Technology',
       size: '12,000+ employees',
       location: 'Los Gatos, CA',
       founded: '1997',
@@ -248,27 +218,27 @@ export default function JobsScreen({ userAvatar }: JobsScreenProps) {
       activeJobs: 6,
       employeeCount: '12,000+',
       revenue: '$31.6B',
-      specialties: ['Streaming', 'Content Production', 'Data Science', 'Entertainment'],
-      benefits: ['Flexible PTO', 'Health Benefits', 'Stock Options', 'Creative Freedom'],
+      specialties: ['Streaming', 'Content Production', 'Recommendation Systems', 'Data Science'],
+      benefits: ['Health Insurance', 'Unlimited PTO', 'Flexible Work', 'Content Budget'],
       recentJobs: mockJobs.filter(job => job.company === 'Netflix')
     },
     'Meta': {
       id: '6',
       name: 'Meta',
       logo: require('@/assets/images/company-logos/Meta-logo.png'),
-      industry: 'Technology',
-      size: '86,000+ employees',
+      industry: 'Technology & Social Media',
+      size: '86,482+ employees',
       location: 'Menlo Park, CA',
       founded: '2004',
-      description: 'Meta Platforms, Inc. is an American multinational technology conglomerate. It is the parent organization of Facebook, Instagram, and WhatsApp.',
+      description: 'Meta Platforms, Inc. is an American multinational technology conglomerate. It owns Facebook, Instagram, WhatsApp, and other products.',
       website: 'meta.com',
       activeJobs: 10,
-      employeeCount: '86,000+',
+      employeeCount: '86,482+',
       revenue: '$116.6B',
-      specialties: ['Social Media', 'VR/AR', 'AI/ML', 'Mobile Apps'],
-      benefits: ['Health Benefits', 'Stock Options', 'Remote Work', 'Innovation'],
+      specialties: ['Social Media', 'Virtual Reality', 'AI/ML', 'Mobile Apps'],
+      benefits: ['Health Insurance', '401k Matching', 'Free Food', 'VR Equipment'],
       recentJobs: mockJobs.filter(job => job.company === 'Meta')
-    }
+    },
   };
 
   const handleCompanyPress = (companyName: string) => {
@@ -280,187 +250,82 @@ export default function JobsScreen({ userAvatar }: JobsScreenProps) {
   };
 
   const handleProfilePress = (user: any) => {
-    // TODO: Implement buildProfile function or replace with direct user object
     setSelectedProfile(user);
     setProfileModalVisible(true);
   };
 
   const toggleSaveJob = (jobId: string) => {
-    setJobs(jobs.map(job => 
-      job.id === jobId ? { ...job, isSaved: !job.isSaved } : job
-    ));
+    setJobs(prevJobs => 
+      prevJobs.map(job => 
+        job.id === jobId ? { ...job, isSaved: !job.isSaved } : job
+      )
+    );
+  };
+
+  const handleApply = (jobId: string) => {
+    console.log('Applying to job:', jobId);
   };
 
   const filteredJobs = jobs.filter(job => {
     const matchesSearch = job.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         job.company.toLowerCase().includes(searchQuery.toLowerCase());
+                         job.company.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                         job.location.toLowerCase().includes(searchQuery.toLowerCase());
+    
     const matchesType = selectedJobType === 'All' || job.type === selectedJobType;
     const matchesLocation = selectedLocation === 'All' || 
-                           (selectedLocation === 'Remote' && job.location.includes('Remote')) ||
+                           selectedLocation === 'Remote' ? job.location.includes('Remote') :
                            job.location.includes(selectedLocation);
     
     return matchesSearch && matchesType && matchesLocation;
   });
 
   const renderJobCard = ({ item }: { item: Job }) => (
-    <TouchableOpacity 
-      style={[styles.jobCard, { backgroundColor: theme.cardColor }]}
-      activeOpacity={0.7}
-    >
-      <View style={styles.jobHeader}>
-        <TouchableOpacity onPress={() => handleCompanyPress(item.company)}>
-          <Image source={item.logo} style={styles.companyLogo} />
-        </TouchableOpacity>
-        <View style={styles.jobInfo}>
-          <Text style={[styles.jobTitle, { color: theme.textColor }]}>{item.title}</Text>
-          <Text style={[styles.companyName, { color: theme.textSecondaryColor }]}>{item.company}</Text>
-          <View style={styles.jobMeta}>
-            <View style={styles.metaItem}>
-              <MaterialCommunityIcons name="map-marker" size={14} color={theme.textTertiaryColor} />
-              <Text style={[styles.metaText, { color: theme.textTertiaryColor }]}>{item.location}</Text>
-            </View>
-            <View style={styles.metaItem}>
-              <MaterialCommunityIcons name="cash" size={14} color={theme.textTertiaryColor} />
-              <Text style={[styles.metaText, { color: theme.textTertiaryColor }]}>{item.salary}</Text>
-            </View>
-          </View>
-        </View>
-        <TouchableOpacity 
-          onPress={() => toggleSaveJob(item.id)}
-          style={styles.saveButton}
-        >
-          <MaterialCommunityIcons 
-            name={item.isSaved ? "bookmark" : "bookmark-outline"} 
-            size={20} 
-            color={item.isSaved ? theme.primaryColor : theme.textSecondaryColor} 
-          />
-        </TouchableOpacity>
-      </View>
-      
-      <View style={styles.jobTypeContainer}>
-        <View style={[styles.jobTypeBadge, { backgroundColor: theme.primaryColor + '20' }]}>
-          <Text style={[styles.jobTypeText, { color: theme.primaryColor }]}>{item.type}</Text>
-        </View>
-        <Text style={[styles.postedDate, { color: theme.textTertiaryColor }]}>{item.postedDate}</Text>
-      </View>
-      
-      <Text style={[styles.jobDescription, { color: theme.textSecondaryColor }]} numberOfLines={3}>
-        {item.description}
-      </Text>
-      
-      <View style={styles.requirementsContainer}>
-        {item.requirements.slice(0, 4).map((req, index) => (
-          <View key={index} style={[styles.requirementBadge, { backgroundColor: theme.surfaceColor }]}>
-            <Text style={[styles.requirementText, { color: theme.textSecondaryColor }]}>{req}</Text>
-          </View>
-        ))}
-        {item.requirements.length > 4 && (
-          <Text style={[styles.moreRequirements, { color: theme.primaryColor }]}>
-            +{item.requirements.length - 4} more
-          </Text>
-        )}
-      </View>
-      
-      <View style={styles.applyContainer}>
-        <TouchableOpacity 
-          style={[styles.applyButton, { backgroundColor: theme.primaryColor }]}
-          activeOpacity={0.8}
-        >
-          <Text style={[styles.applyButtonText, { color: theme.textColor }]}>Apply</Text>
-        </TouchableOpacity>
-        <TouchableOpacity 
-          style={[styles.saveJobButton, { borderColor: theme.primaryColor }]}
-          activeOpacity={0.8}
-        >
-          <Text style={[styles.saveJobText, { color: theme.primaryColor }]}>Save</Text>
-        </TouchableOpacity>
-      </View>
-    </TouchableOpacity>
+    <JobCard
+      job={item}
+      onCompanyPress={handleCompanyPress}
+      onSaveToggle={toggleSaveJob}
+      onApply={handleApply}
+      onAvatarPress={() => handleProfilePress({
+        id: item.id,
+        name: item.company,
+        title: item.title,
+        company: item.company,
+        avatar: item.logo,
+        mutualConnections: 0,
+        isOnline: false,
+        isConnected: false,
+        isPending: false,
+        location: item.location,
+        about: item.description,
+        experience: [],
+        education: [],
+        skills: item.requirements || [],
+      })}
+    />
   );
-
-  const renderFilterChip = ({ item, type }: { item: string; type: 'jobType' | 'location' }) => {
-    const isSelected = type === 'jobType' ? selectedJobType === item : selectedLocation === item;
-    return (
-      <TouchableOpacity
-        style={[
-          styles.filterChip,
-          { backgroundColor: isSelected ? theme.primaryColor : theme.surfaceColor }
-        ]}
-        onPress={() => {
-          if (type === 'jobType') {
-            setSelectedJobType(item);
-          } else {
-            setSelectedLocation(item);
-          }
-        }}
-      >
-        <Text style={[
-          styles.filterChipText,
-          { color: isSelected ? theme.textColor : theme.textSecondaryColor }
-        ]}>
-          {item}
-        </Text>
-      </TouchableOpacity>
-    );
-  };
 
   return (
     <View style={[styles.container, { backgroundColor: theme.backgroundColor }]}>
       {/* Header */}
-      <View style={[styles.header, { backgroundColor: theme.surfaceColor }]}>
-        <View style={styles.headerTop}>
-          <TouchableOpacity onPress={() => handleProfilePress({ name: 'Current User', avatar: userAvatar ? { uri: userAvatar } : require('@/assets/images/default-avator.jpg') })}>
-            <Image 
-              source={userAvatar ? { uri: userAvatar } : require('@/assets/images/default-avator.jpg')} 
-              style={[styles.profilePicture, { borderColor: theme.primaryColor }]} 
-            />
-          </TouchableOpacity>
-          
-          <View style={[styles.searchContainer, { backgroundColor: theme.inputBackgroundColor }]}>
-            <MaterialCommunityIcons name="briefcase" size={20} color={theme.textSecondaryColor} style={styles.searchIcon} />
-            <TextInput
-              style={[styles.searchInput, { color: theme.textColor }]}
-              placeholder="Search jobs"
-              placeholderTextColor={theme.placeholderColor}
-              value={searchQuery}
-              onChangeText={setSearchQuery}
-            />
-          </View>
-          
-          <TouchableOpacity 
-            style={styles.filterButton}
-            onPress={() => setShowFilters(!showFilters)}
-          >
-            <MaterialCommunityIcons 
-              name="tune" 
-              size={24} 
-              color={theme.textColor} 
-            />
-          </TouchableOpacity>
-        </View>
-      </View>
+      <JobSearchHeader
+        searchQuery={searchQuery}
+        onSearchChange={setSearchQuery}
+        onFilterToggle={() => setShowFilters(!showFilters)}
+        onProfilePress={() => handleProfilePress({ name: 'Current User', avatar: userAvatar ? { uri: userAvatar } : require('@/assets/images/default-avator.jpg') })}
+        userAvatar={userAvatar}
+        showFilters={showFilters}
+      />
 
       {/* Filters */}
       {showFilters && (
-        <View style={[styles.filtersContainer, { backgroundColor: theme.surfaceColor }]}>
-          <Text style={[styles.filterSectionTitle, { color: theme.textColor }]}>Job Type</Text>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.filterScroll}>
-            {jobTypes.map((type, index) => (
-              <View key={index} style={styles.filterChipContainer}>
-                {renderFilterChip({ item: type, type: 'jobType' })}
-              </View>
-            ))}
-          </ScrollView>
-          
-          <Text style={[styles.filterSectionTitle, { color: theme.textColor }]}>Location</Text>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.filterScroll}>
-            {locations.map((location, index) => (
-              <View key={index} style={styles.filterChipContainer}>
-                {renderFilterChip({ item: location, type: 'location' })}
-              </View>
-            ))}
-          </ScrollView>
-        </View>
+        <JobFilters
+          jobTypes={jobTypes}
+          locations={locations}
+          selectedJobType={selectedJobType}
+          selectedLocation={selectedLocation}
+          onJobTypeChange={setSelectedJobType}
+          onLocationChange={setSelectedLocation}
+        />
       )}
 
       {/* Job Listings */}
@@ -494,112 +359,13 @@ export default function JobsScreen({ userAvatar }: JobsScreenProps) {
           profile={selectedProfile}
         />
       )}
-      {/* Company Profile Modal */}
-      {selectedCompany && (
-        <Modal
-          visible={companyModalVisible}
-          animationType="slide"
-          presentationStyle="pageSheet"
-        >
-          <View style={[styles.container, { backgroundColor: theme.backgroundColor }]}>
-            {/* Header */}
-            <View style={[styles.header, { borderBottomColor: theme.borderColor }]}>
-              <TouchableOpacity onPress={() => setCompanyModalVisible(false)} style={styles.headerButton}>
-                <MaterialCommunityIcons name="close" size={24} color={theme.textColor} />
-              </TouchableOpacity>
-              <Text style={[styles.headerTitle, { color: theme.textColor }]}>
-                Company Profile
-              </Text>
-              <View style={styles.headerSpacer} />
-            </View>
 
-            <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
-              {/* Company Header */}
-              <View style={[styles.companyHeader, { backgroundColor: theme.cardColor }]}>
-                <View style={styles.companyInfo}>
-                  <Image source={selectedCompany.logo} style={styles.companyLogoLarge} />
-                  
-                  <View style={styles.companyDetails}>
-                    <Text style={[styles.companyNameLarge, { color: theme.textColor }]}>
-                      {selectedCompany.name}
-                    </Text>
-                    <Text style={[styles.companyIndustry, { color: theme.textSecondaryColor }]}>
-                      {selectedCompany.industry}
-                    </Text>
-                    <Text style={[styles.companyLocation, { color: theme.textTertiaryColor }]}>
-                      {selectedCompany.location} • {selectedCompany.size}
-                    </Text>
-                    <Text style={[styles.companyFounded, { color: theme.textTertiaryColor }]}>
-                      Founded {selectedCompany.founded}
-                    </Text>
-                  </View>
-                </View>
-
-                {/* Company Stats */}
-                <View style={styles.companyStats}>
-                  <View style={styles.statItem}>
-                    <Text style={[styles.statValue, { color: theme.textColor }]}>{selectedCompany.activeJobs}</Text>
-                    <Text style={[styles.statLabel, { color: theme.textSecondaryColor }]}>Active Jobs</Text>
-                  </View>
-                  <View style={styles.statItem}>
-                    <Text style={[styles.statValue, { color: theme.textColor }]}>{selectedCompany.employeeCount}</Text>
-                    <Text style={[styles.statLabel, { color: theme.textSecondaryColor }]}>Employees</Text>
-                  </View>
-                  <View style={styles.statItem}>
-                    <Text style={[styles.statValue, { color: theme.textColor }]}>{selectedCompany.revenue}</Text>
-                    <Text style={[styles.statLabel, { color: theme.textSecondaryColor }]}>Revenue</Text>
-                  </View>
-                </View>
-              </View>
-
-              {/* Company Description */}
-              <View style={[styles.section, { backgroundColor: theme.cardColor }]}>
-                <Text style={[styles.sectionTitle, { color: theme.textColor }]}>About {selectedCompany.name}</Text>
-                <Text style={[styles.companyDescription, { color: theme.textColor }]}>
-                  {selectedCompany.description}
-                </Text>
-              </View>
-
-              {/* Specialties */}
-              <View style={[styles.section, { backgroundColor: theme.cardColor }]}>
-                <Text style={[styles.sectionTitle, { color: theme.textColor }]}>Specialties</Text>
-                <View style={styles.specialtiesContainer}>
-                  {selectedCompany.specialties.map((specialty, index) => (
-                    <View key={index} style={[styles.specialtyTag, { backgroundColor: theme.primaryColor + '20' }]}>
-                      <Text style={[styles.specialtyText, { color: theme.primaryColor }]}>{specialty}</Text>
-                    </View>
-                  ))}
-                </View>
-              </View>
-
-              {/* Benefits */}
-              <View style={[styles.section, { backgroundColor: theme.cardColor }]}>
-                <Text style={[styles.sectionTitle, { color: theme.textColor }]}>Benefits</Text>
-                <View style={styles.benefitsContainer}>
-                  {selectedCompany.benefits.map((benefit, index) => (
-                    <View key={index} style={styles.benefitItem}>
-                      <MaterialCommunityIcons name="check-circle" size={16} color={theme.primaryColor} />
-                      <Text style={[styles.benefitText, { color: theme.textColor }]}>{benefit}</Text>
-                    </View>
-                  ))}
-                </View>
-              </View>
-
-              {/* Recent Jobs */}
-              <View style={[styles.section, { backgroundColor: theme.cardColor }]}>
-                <Text style={[styles.sectionTitle, { color: theme.textColor }]}>Recent Jobs</Text>
-                {selectedCompany.recentJobs.map((job, index) => (
-                  <View key={index} style={[styles.recentJobItem, { borderBottomColor: theme.borderColor }]}>
-                    <Text style={[styles.recentJobTitle, { color: theme.textColor }]}>{job.title}</Text>
-                    <Text style={[styles.recentJobLocation, { color: theme.textSecondaryColor }]}>{job.location}</Text>
-                    <Text style={[styles.recentJobSalary, { color: theme.textTertiaryColor }]}>{job.salary}</Text>
-                  </View>
-                ))}
-              </View>
-            </ScrollView>
-          </View>
-        </Modal>
-      )}
+      {/* Company Modal */}
+      <CompanyModal
+        visible={companyModalVisible}
+        onClose={() => setCompanyModalVisible(false)}
+        company={selectedCompany}
+      />
     </View>
   );
 }
@@ -608,71 +374,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
-  header: {
-    paddingTop: 25,
-    paddingHorizontal: 20,
-  },
-  headerTop: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 16,
-  },
-  profileButton: {
-    padding: 4,
-  },
-  profilePicture: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    borderWidth: 3,
-  },
-  filterButton: {
-    padding: 8,
-  },
-  searchContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    borderRadius: 10,
-    paddingHorizontal: 8,
-    borderWidth: 1,
-    width: 220,
-    height: 40,
-    marginHorizontal: 8,
-  },
-  searchIcon: {
-    marginRight: 10,
-  },
-  searchInput: {
-    flex: 1,
-    marginLeft: 4,
-    fontSize: 14,
-  },
-  filtersContainer: {
-    paddingHorizontal: 20,
-    paddingBottom: 16,
-  },
-  filterSectionTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    marginBottom: 12,
-    marginTop: 16,
-  },
-  filterScroll: {
-    marginBottom: 8,
-  },
-  filterChipContainer: {
-    marginRight: 8,
-  },
-  filterChip: {
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 20,
-  },
-  filterChipText: {
-    fontSize: 14,
-    fontWeight: '500',
-  },
   jobsList: {
     paddingHorizontal: 20,
     paddingBottom: 20,
@@ -680,124 +381,6 @@ const styles = StyleSheet.create({
   resultsCount: {
     fontSize: 14,
     marginBottom: 16,
-  },
-  jobCard: {
-    borderRadius: 16,
-    padding: 16,
-    marginBottom: 16,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 3,
-  },
-  jobHeader: {
-    flexDirection: 'row',
-    marginBottom: 12,
-  },
-  companyLogo: {
-    width: 48,
-    height: 48,
-    borderRadius: 8,
-    marginRight: 12,
-  },
-  jobInfo: {
-    flex: 1,
-  },
-  jobTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    marginBottom: 4,
-  },
-  companyName: {
-    fontSize: 16,
-    marginBottom: 8,
-  },
-  jobMeta: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  metaItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginRight: 16,
-  },
-  metaText: {
-    fontSize: 14,
-    marginLeft: 4,
-  },
-  saveButton: {
-    padding: 4,
-  },
-  jobTypeContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 12,
-  },
-  jobTypeBadge: {
-    paddingHorizontal: 12,
-    paddingVertical: 4,
-    borderRadius: 12,
-  },
-  jobTypeText: {
-    fontSize: 12,
-    fontWeight: '600',
-  },
-  postedDate: {
-    fontSize: 12,
-  },
-  jobDescription: {
-    fontSize: 14,
-    lineHeight: 20,
-    marginBottom: 12,
-  },
-  requirementsContainer: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    marginBottom: 16,
-  },
-  requirementBadge: {
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 8,
-    marginRight: 8,
-    marginBottom: 4,
-  },
-  requirementText: {
-    fontSize: 12,
-  },
-  moreRequirements: {
-    fontSize: 12,
-    fontWeight: '500',
-  },
-  applyContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginTop: 12,
-  },
-  applyButton: {
-    paddingVertical: 12,
-    borderRadius: 8,
-    alignItems: 'center',
-    flex: 1,
-    marginRight: 8,
-  },
-  applyButtonText: {
-    fontSize: 16,
-    fontWeight: 'bold',
-  },
-  saveJobButton: {
-    paddingVertical: 12,
-    borderRadius: 8,
-    alignItems: 'center',
-    borderWidth: 1,
-    flex: 1,
-    marginLeft: 8,
-  },
-  saveJobText: {
-    fontSize: 16,
-    fontWeight: '600',
   },
   emptyState: {
     alignItems: 'center',
@@ -814,122 +397,5 @@ const styles = StyleSheet.create({
     fontSize: 16,
     textAlign: 'center',
     paddingHorizontal: 40,
-  },
-  headerButton: {
-    padding: 8,
-  },
-  headerTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-  },
-  headerSpacer: {
-    flex: 1,
-  },
-  content: {
-    padding: 20,
-  },
-  companyHeader: {
-    padding: 20,
-    borderBottomWidth: 1,
-    borderBottomColor: '#ccc',
-  },
-  companyInfo: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  companyDetails: {
-    marginLeft: 20,
-  },
-  companyNameLarge: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    marginBottom: 4,
-  },
-  companyIndustry: {
-    fontSize: 16,
-    marginBottom: 8,
-  },
-  companyLocation: {
-    fontSize: 14,
-    marginBottom: 8,
-  },
-  companyFounded: {
-    fontSize: 12,
-  },
-  companyStats: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginTop: 20,
-  },
-  statItem: {
-    alignItems: 'center',
-  },
-  statValue: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    marginBottom: 4,
-  },
-  statLabel: {
-    fontSize: 14,
-  },
-  section: {
-    padding: 20,
-    marginBottom: 20,
-  },
-  sectionTitle: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    marginBottom: 12,
-  },
-  companyDescription: {
-    fontSize: 14,
-    lineHeight: 20,
-  },
-  specialtiesContainer: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-  },
-  specialtyTag: {
-    paddingHorizontal: 12,
-    paddingVertical: 4,
-    borderRadius: 8,
-    marginRight: 8,
-    marginBottom: 4,
-  },
-  specialtyText: {
-    fontSize: 12,
-  },
-  benefitsContainer: {
-    marginTop: 12,
-  },
-  benefitItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 8,
-  },
-  benefitText: {
-    fontSize: 14,
-    marginLeft: 8,
-  },
-  recentJobItem: {
-    padding: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: '#ccc',
-  },
-  recentJobTitle: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    marginBottom: 4,
-  },
-  recentJobLocation: {
-    fontSize: 14,
-  },
-  recentJobSalary: {
-    fontSize: 12,
-  },
-  companyLogoLarge: {
-    width: 120,
-    height: 120,
-    borderRadius: 8,
   },
 }); 

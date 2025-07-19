@@ -1,19 +1,19 @@
-import React, { useState, useRef } from 'react';
-import {
-  View,
-  Text,
-  TouchableOpacity,
-  StyleSheet,
-  Image,
-  TextInput,
-  ScrollView,
-  Alert,
-  Dimensions,
-  Modal,
-} from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import React, { useState } from 'react';
+import {
+    Alert,
+    Dimensions,
+    Image,
+    Modal,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View,
+} from 'react-native';
+import { useStories } from '../../../contexts/StoriesContext';
 import { useCurrentTheme } from '../../../contexts/ThemeContext';
-import { LinearGradient } from 'expo-linear-gradient';
 
 const { width, height } = Dimensions.get('window');
 
@@ -25,6 +25,7 @@ interface StoryCreationScreenProps {
 
 export default function StoryCreationScreen({ visible, onClose, onStoryCreated }: StoryCreationScreenProps) {
   const theme = useCurrentTheme();
+  const { addStory } = useStories();
   const [storyText, setStoryText] = useState('');
   const [selectedMedia, setSelectedMedia] = useState<string | null>(null);
   const [textColor, setTextColor] = useState('#ffffff');
@@ -63,7 +64,15 @@ export default function StoryCreationScreen({ visible, onClose, onStoryCreated }
   };
 
   const handlePostStory = () => {
-    Alert.alert('Success', 'Your story has been posted!');
+    // For now, use placeholder user info
+    addStory({
+      userId: 'me',
+      userName: 'Your Story',
+      avatar: require('@/assets/images/default-avator.jpg'),
+      media: selectedMedia || undefined,
+      text: storyText || undefined,
+      stickers: selectedSticker ? [selectedSticker] : undefined,
+    });
     onStoryCreated();
     onClose();
   };

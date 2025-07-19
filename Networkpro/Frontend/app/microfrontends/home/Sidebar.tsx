@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, Image, TouchableOpacity, Dimensions } from 'react-native';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
+import React, { useState } from 'react';
+import { Dimensions, Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useCurrentTheme } from '../../../contexts/ThemeContext';
 import SettingScreen from './SettingScreen';
 
@@ -9,17 +9,17 @@ const { width, height } = Dimensions.get('window');
 interface SidebarProps {
   userAvatar?: string | null;
   onClose: () => void;
+  onMePress?: () => void;
 }
 
 const sidebarItems = [
   { label: 'Home', icon: 'home-variant', active: true },
-  { label: 'Me', icon: 'account-circle-outline' },
   { label: 'Discover', icon: 'compass-outline' },
   { label: 'Messages', icon: 'message-outline' },
   { label: 'Settings', icon: 'cog-outline' },
 ];
 
-export default function Sidebar({ userAvatar, onClose }: SidebarProps) {
+export default function Sidebar({ userAvatar, onClose, onMePress }: SidebarProps) {
   const theme = useCurrentTheme();
   const [showSettings, setShowSettings] = useState(false);
 
@@ -42,7 +42,7 @@ export default function Sidebar({ userAvatar, onClose }: SidebarProps) {
             <MaterialCommunityIcons name="close" size={24} color={theme.textSecondaryColor} />
           </TouchableOpacity>
           
-          <TouchableOpacity style={[styles.profilePicWrap, { borderColor: theme.primaryColor }]}>
+          <TouchableOpacity style={[styles.profilePicWrap, { borderColor: theme.primaryColor }]} onPress={onMePress}>
             <Image source={userAvatar ? { uri: userAvatar } : require('@/assets/images/Avator-Image.jpg')} style={styles.profilePic} />
           </TouchableOpacity>
           
