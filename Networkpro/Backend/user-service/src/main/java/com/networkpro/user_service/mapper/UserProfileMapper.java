@@ -82,38 +82,41 @@ public class UserProfileMapper {
         return userProfile;
     }
 
-    public UserProfile toEntity(UserProfileUpdateDto dto) {
-        if (dto == null) return null;
-        UserProfile userProfile = new UserProfile();
-        userProfile.setFullName(dto.getFullName());
-        userProfile.setEmail(dto.getEmail());
-        userProfile.setHeadline(dto.getHeadline());
-        userProfile.setBio(dto.getSummary());
-        userProfile.setLocation(dto.getLocation());
-        userProfile.setIndustry(dto.getIndustry());
-        userProfile.setWebsite(dto.getWebsite());
-        userProfile.setPhoneNumber(dto.getPhoneNumber());
-        userProfile.setProfilePublic(dto.isProfilePublic());
-        userProfile.setContactInfoPublic(dto.isContactInfoPublic());
-        userProfile.setWorkExperiencePublic(dto.isWorkExperiencePublic());
-        userProfile.setEducationPublic(dto.isEducationPublic());
-        userProfile.setSkillsPublic(dto.isSkillsPublic());
-        userProfile.setCurrentPosition(dto.getCurrentPosition());
-        userProfile.setCurrentCompany(dto.getCurrentCompany());
-        if (dto.getSkills() != null) userProfile.setSkills(new java.util.HashSet<>(dto.getSkills()));
-        return userProfile;
-    }
+        public UserProfile toEntity(UserProfileUpdateDto dto) {
+                if (dto == null)
+                        return null;
+                UserProfile userProfile = new UserProfile();
+                userProfile.setFullName(dto.getFullName());
+                userProfile.setEmail(dto.getEmail());
+                userProfile.setHeadline(dto.getHeadline());
+                userProfile.setBio(dto.getSummary());
+                userProfile.setLocation(dto.getLocation());
+                userProfile.setIndustry(dto.getIndustry());
+                userProfile.setWebsite(dto.getWebsite());
+                userProfile.setPhoneNumber(dto.getPhoneNumber());
+                userProfile.setProfilePublic(dto.isProfilePublic());
+                userProfile.setContactInfoPublic(dto.isContactInfoPublic());
+                userProfile.setWorkExperiencePublic(dto.isWorkExperiencePublic());
+                userProfile.setEducationPublic(dto.isEducationPublic());
+                userProfile.setSkillsPublic(dto.isSkillsPublic());
+                userProfile.setCurrentPosition(dto.getCurrentPosition());
+                userProfile.setCurrentCompany(dto.getCurrentCompany());
+                if (dto.getSkills() != null)
+                        userProfile.setSkills(new java.util.HashSet<>(dto.getSkills()));
+                return userProfile;
+        }
 
-    public PrivacySettingsDto toPrivacySettingsDto(UserProfile userProfile) {
-        if (userProfile == null) return null;
-        
-        return PrivacySettingsDto.builder()
-                .id(userProfile.getId())
-                .profileVisible(userProfile.isProfilePublic())
-                .showEmail(userProfile.isContactInfoPublic())
-                .showPhone(userProfile.isContactInfoPublic())
-                .showWorkExperience(userProfile.isWorkExperiencePublic())
-                .showEducation(userProfile.isEducationPublic())
-                .build();
-    }
-} 
+        public PrivacySettingsDto toPrivacySettingsDto(UserProfile userProfile) {
+                if (userProfile == null)
+                        return null;
+
+                return PrivacySettingsDto.builder()
+                                .id(userProfile.getId())
+                                .profileVisible(userProfile.isProfilePublic())
+                                .showEmail(userProfile.isContactInfoPublic())
+                                .showPhone(userProfile.isContactInfoPublic())
+                                .showWorkExperience(userProfile.isWorkExperiencePublic())
+                                .showEducation(userProfile.isEducationPublic())
+                                .build();
+        }
+}

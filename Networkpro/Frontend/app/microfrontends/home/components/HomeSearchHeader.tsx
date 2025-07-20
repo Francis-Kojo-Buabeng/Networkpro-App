@@ -9,61 +9,49 @@ import {
 } from 'react-native';
 import { useCurrentTheme } from '../../../../contexts/ThemeContext';
 
-interface JobSearchHeaderProps {
+interface HomeSearchHeaderProps {
   searchQuery: string;
   onSearchChange: (query: string) => void;
-  onFilterToggle: () => void;
   onProfilePress: () => void;
-  userAvatar?: string | null;
-  showFilters: boolean;
   onNotificationPress: () => void;
+  userAvatar?: string | null;
 }
 
-export default function JobSearchHeader({
+export default function HomeSearchHeader({
   searchQuery,
   onSearchChange,
-  onFilterToggle,
   onProfilePress,
-  userAvatar,
-  showFilters,
   onNotificationPress,
-}: JobSearchHeaderProps) {
+  userAvatar,
+}: HomeSearchHeaderProps) {
   const theme = useCurrentTheme();
 
   return (
     <View style={[styles.header, { backgroundColor: theme.surfaceColor }]}>
       <View style={styles.headerTop}>
-        <TouchableOpacity onPress={onProfilePress}>
+        <TouchableOpacity style={styles.profileButton} onPress={onProfilePress}>
           <Image 
             source={userAvatar ? { uri: userAvatar } : require('@/assets/images/default-avator.jpg')} 
             style={[styles.profilePicture, { borderColor: theme.primaryColor }]} 
           />
         </TouchableOpacity>
         
-        <View style={[styles.searchContainer, { backgroundColor: theme.inputBackgroundColor, width: 200 }]}>
-          <MaterialCommunityIcons name="briefcase" size={20} color={theme.textSecondaryColor} style={styles.searchIcon} />
+        <View style={[styles.searchContainer, { backgroundColor: theme.inputBackgroundColor }]}>
+          <MaterialCommunityIcons name="magnify" size={20} color={theme.textSecondaryColor} style={styles.searchIcon} />
           <TextInput
             style={[styles.searchInput, { color: theme.textColor }]}
-            placeholder="Search jobs"
+            placeholder="Search jobs, people..."
             placeholderTextColor={theme.placeholderColor}
             value={searchQuery}
             onChangeText={onSearchChange}
           />
         </View>
         
-        <TouchableOpacity style={{ marginRight: 8 }} onPress={onNotificationPress}>
-          <MaterialCommunityIcons name="bell-outline" size={24} color={theme.textColor} />
-        </TouchableOpacity>
-        
         <TouchableOpacity 
-          style={[styles.filterButton, { backgroundColor: showFilters ? theme.primaryColor + '20' : 'transparent' }]}
-          onPress={onFilterToggle}
+          style={styles.headerButton}
+          onPress={onNotificationPress}
         >
-          <MaterialCommunityIcons 
-            name="tune" 
-            size={24} 
-            color={showFilters ? theme.primaryColor : theme.textColor} 
-          />
+          <MaterialCommunityIcons name="bell-outline" size={24} color={theme.textColor} />
         </TouchableOpacity>
       </View>
     </View>
@@ -81,33 +69,34 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 16,
   },
+  profileButton: {
+    padding: 4,
+  },
   profilePicture: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
     borderWidth: 3,
   },
-  filterButton: {
+  headerButton: {
     padding: 8,
-    borderRadius: 8,
   },
   searchContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    borderRadius: 10,
-    paddingHorizontal: 8,
+    borderRadius: 12,
+    paddingHorizontal: 12,
     borderWidth: 1,
-    width: 220,
+    flex: 1,
     height: 40,
-    marginHorizontal: 8,
+    marginHorizontal: 12,
   },
   searchIcon: {
     marginRight: 10,
   },
   searchInput: {
     flex: 1,
-    marginLeft: 4,
-    fontSize: 14,
+    height: 44,
+    fontSize: 17,
   },
-
 }); 

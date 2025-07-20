@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import { Dimensions, Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useCurrentTheme } from '../../../contexts/ThemeContext';
 import SettingScreen from './SettingScreen';
+import NetworkOverviewModal from '../../../components/NetworkOverviewModal';
 
 const { width, height } = Dimensions.get('window');
 
@@ -14,6 +15,7 @@ interface SidebarProps {
 
 const sidebarItems = [
   { label: 'Home', icon: 'home-variant', active: true },
+  { label: 'Network Overview', icon: 'chart-line' },
   { label: 'Discover', icon: 'compass-outline' },
   { label: 'Messages', icon: 'message-outline' },
   { label: 'Settings', icon: 'cog-outline' },
@@ -22,6 +24,22 @@ const sidebarItems = [
 export default function Sidebar({ userAvatar, onClose, onMePress }: SidebarProps) {
   const theme = useCurrentTheme();
   const [showSettings, setShowSettings] = useState(false);
+  const [showNetworkOverview, setShowNetworkOverview] = useState(false);
+
+  const networkStats = {
+    totalConnections: 847,
+    pendingRequests: 12,
+    newSuggestions: 23,
+    profileViews: 45,
+  };
+
+  const handleSidebarItemPress = (label: string) => {
+    if (label === 'Settings') {
+      setShowSettings(true);
+    } else if (label === 'Network Overview') {
+      setShowNetworkOverview(true);
+    }
+  };
 
   return (
     <View style={styles.overlay}>
@@ -34,6 +52,14 @@ export default function Sidebar({ userAvatar, onClose, onMePress }: SidebarProps
           <SettingScreen userAvatar={userAvatar} onClose={() => setShowSettings(false)} />
         </View>
       )}
+      
+      {/* Network Overview Modal */}
+      <NetworkOverviewModal
+        visible={showNetworkOverview}
+        onClose={() => setShowNetworkOverview(false)}
+        networkStats={networkStats}
+        theme={theme}
+      />
       
       {/* Sidebar - Only show when settings is not active */}
       {!showSettings && (
@@ -54,7 +80,7 @@ export default function Sidebar({ userAvatar, onClose, onMePress }: SidebarProps
                   styles.sidebarItem, 
                   { backgroundColor: item.active ? theme.cardColor : 'transparent' }
                 ]}
-                onPress={item.label === 'Settings' ? () => setShowSettings(true) : undefined}
+                onPress={() => handleSidebarItemPress(item.label)}
               >
                 <MaterialCommunityIcons 
                   name={item.icon as any} 

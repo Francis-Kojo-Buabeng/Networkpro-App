@@ -13,7 +13,12 @@ import {
 import MessageModal from '../../../components/MessageModal';
 import NewMessageButton from '../../../components/NewMessageButton';
 import ProfileModal from '../../../components/ProfileModal';
+import NotificationModal from '../../../components/NotificationModal';
 import { useCurrentTheme } from '../../../contexts/ThemeContext';
+import { useProfileNavigation } from '../../../contexts/ProfileNavigationContext';
+import {
+  MessageSearchHeader
+} from './components';
 
 const { width } = Dimensions.get('window');
 
@@ -46,12 +51,15 @@ interface MessagesScreenProps {
 
 export default function MessagesScreen({ userAvatar }: MessagesScreenProps) {
   const theme = useCurrentTheme();
+  const { openProfile } = useProfileNavigation();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedFilter, setSelectedFilter] = useState<'all' | 'unread' | 'pinned'>('all');
+  const [showFilters, setShowFilters] = useState(false);
   const [selectedConversation, setSelectedConversation] = useState<Conversation | null>(null);
   const [messageModalVisible, setMessageModalVisible] = useState(false);
   const [profileModalVisible, setProfileModalVisible] = useState(false);
   const [selectedProfile, setSelectedProfile] = useState<any | null>(null);
+  const [notificationModalVisible, setNotificationModalVisible] = useState(false);
   const [conversations, setConversations] = useState<Conversation[]>([
     {
       id: '1',
@@ -252,24 +260,25 @@ export default function MessagesScreen({ userAvatar }: MessagesScreenProps) {
     title: user.title || 'Professional',
     company: user.company || '',
     avatar: user.avatar,
-    mutualConnections: 12,
+    mutualConnections: 8,
     isOnline: user.isOnline || false,
-    isConnected: false,
+    isConnected: true,
     isPending: false,
+    isSuggested: false,
     location: 'San Francisco, CA',
-    about: 'Experienced professional passionate about networking and growth.',
+    about: 'Experienced professional with strong communication skills.',
     experience: [
-      { id: '1', title: 'Senior Developer', company: user.company || 'Company', duration: '2 yrs', description: 'Worked on various projects.' }
+      { id: '1', title: 'Senior Professional', company: user.company || 'Company', duration: '3 yrs', description: 'Led various initiatives and projects.' }
     ],
     education: [
-      { id: '1', degree: 'B.Sc. Computer Science', school: 'University', year: '2018' }
+      { id: '1', degree: 'Master\'s Degree', school: 'University', year: '2019' }
     ],
-    skills: ['Networking', 'React Native', 'Leadership'],
+    skills: ['Communication', 'Leadership', 'Project Management', 'Networking'],
   });
 
   const handleProfilePress = (user: any) => {
-    setSelectedProfile(buildProfile(user));
-    setProfileModalVisible(true);
+    const profileData = buildProfile(user);
+    openProfile(profileData);
   };
 
   const handleConversationPress = (conversation: Conversation) => {
@@ -411,45 +420,24 @@ export default function MessagesScreen({ userAvatar }: MessagesScreenProps) {
   return (
     <View style={[styles.container, { backgroundColor: theme.backgroundColor }]}>
       {/* Header */}
-      <View style={[styles.header, { backgroundColor: theme.surfaceColor }]}> 
-        <View style={styles.headerTopRow}> 
-          <Image 
-            source={userAvatar ? { uri: userAvatar } : require('@/assets/images/Avator-Image.jpg')} 
-            style={[styles.profilePicture, { borderColor: theme.primaryColor }]} 
-          />
-          <View style={styles.headerSearchWrapper}>
-            <View style={[styles.headerSearchContainer, { backgroundColor: theme.inputBackgroundColor }]}> 
-              <MaterialCommunityIcons name="magnify" size={18} color={theme.textSecondaryColor} />
-              <TextInput
-                style={[styles.headerSearchInput, { color: theme.textColor }]}
-                placeholder="Search..."
-                placeholderTextColor={theme.placeholderColor}
-                value={searchQuery}
-                onChangeText={setSearchQuery}
-                returnKeyType="search"
-              />
-            </View>
-          </View>
-          <NewMessageButton 
-            onStartConversation={(contact) => {
-              // Handle starting a new conversation
-              console.log('Starting conversation with:', contact.name);
-            }}
-            onCreateGroup={() => {
-              console.log('Creating new group');
-            }}
-            onBroadcast={() => {
-              console.log('Opening broadcast');
-            }}
-          />
-        </View>
-        {/* Filters */}
+      <MessageSearchHeader
+        searchQuery={searchQuery}
+        onSearchChange={setSearchQuery}
+        onFilterToggle={() => setShowFilters(!showFilters)}
+        onProfilePress={() => handleProfilePress({ name: 'Current User', avatar: userAvatar ? { uri: userAvatar } : require('@/assets/images/default-avator.jpg') })}
+        onNotificationPress={() => setNotificationModalVisible(true)}
+        userAvatar={userAvatar}
+        showFilters={showFilters}
+      />
+
+      {/* Filters */}
+      {showFilters && (
         <View style={styles.filtersContainer}>
           {renderFilterButton('all', 'All', 'message-text')}
           {renderFilterButton('unread', 'Unread', 'email-outline')}
           {renderFilterButton('pinned', 'Pinned', 'pin')}
         </View>
-      </View>
+      )}
 
       {/* Conversations List */}
       <FlatList
@@ -504,6 +492,10 @@ export default function MessagesScreen({ userAvatar }: MessagesScreenProps) {
           profile={selectedProfile}
         />
       )}
+      <NotificationModal
+        visible={notificationModalVisible}
+        onClose={() => setNotificationModalVisible(false)}
+      />
     </View>
   );
 }

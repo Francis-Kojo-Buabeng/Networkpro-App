@@ -17,87 +17,82 @@ export default function ConnectionCard({ item, theme, onPress, onAccept, onIgnor
     <TouchableOpacity
       style={[
         styles.connectionCard,
-        { backgroundColor: theme.cardColor, borderWidth: 1, borderColor: theme.borderColor, marginBottom: 18, shadowOpacity: 0.12 }
+        { backgroundColor: theme.cardColor, borderWidth: 1, borderColor: theme.borderColor, marginBottom: 12, shadowOpacity: 0.12, width: '48%' }
       ]}
       onPress={onPress}
       activeOpacity={0.7}
     >
-      <View style={styles.connectionHeader}>
-        <View style={styles.avatarContainer}>
-          <Image source={item.avatar} style={styles.avatar} />
-          {item.isOnline && <View style={styles.onlineIndicator} />}
-        </View>
-        <View style={styles.connectionInfo}>
-          <Text style={[styles.connectionName, { color: theme.textColor }]}> 
-            {item.name}
-          </Text>
-          <Text style={[styles.connectionTitle, { color: theme.textSecondaryColor }]}> 
-            {item.title}
-          </Text>
-          <Text style={[styles.connectionCompany, { color: theme.textTertiaryColor }]}> 
-            {item.company}
-          </Text>
-          <Text style={[styles.mutualConnections, { color: theme.textTertiaryColor }]}> 
-            {item.mutualConnections} mutual connections
-          </Text>
-        </View>
-      </View>
-      <View style={styles.connectionActionsRow}>
-        {item.isPending ? (
-          <View style={styles.pendingActions}>
-            <TouchableOpacity 
-              style={[styles.actionButton, { backgroundColor: theme.primaryColor }]}
-              onPress={(e) => { e.stopPropagation(); onAccept && onAccept(); }}
-            >
-              <Text style={[styles.actionButtonText, { color: '#fff' }]}>Accept</Text>
-            </TouchableOpacity>
-            <TouchableOpacity 
-              style={[styles.actionButton, { backgroundColor: theme.surfaceColor, borderColor: theme.borderColor }]}
-              onPress={(e) => { e.stopPropagation(); onIgnore && onIgnore(); }}
-            >
-              <Text style={[styles.actionButtonText, { color: theme.textColor }]}>Ignore</Text>
-            </TouchableOpacity>
+      {/* Dismiss X button */}
+      <TouchableOpacity style={styles.dismissButton}>
+        <MaterialCommunityIcons name="close" size={16} color={theme.textTertiaryColor} />
+      </TouchableOpacity>
+
+      {/* Profile Picture at Top Center */}
+      <View style={styles.avatarContainer}>
+        <Image source={item.avatar} style={styles.avatar} />
+        {item.isOnline && <View style={styles.onlineIndicator} />}
+        {/* Open to work badge */}
+        {item.isOpenToWork && (
+          <View style={styles.openToWorkBadge}>
+            <Text style={styles.openToWorkText}>#OPENTOWORK</Text>
           </View>
-        ) : item.isSuggested ? (
-          <TouchableOpacity 
-            style={[styles.actionButton, { backgroundColor: theme.primaryColor, minWidth: 100 }]}
-            onPress={(e) => { e.stopPropagation(); onConnect && onConnect(); }}
-          >
-            <Text style={[styles.actionButtonText, { color: '#fff' }]}>Connect</Text>
-          </TouchableOpacity>
-        ) : (
-          <TouchableOpacity 
-            style={[styles.messageButton, { backgroundColor: theme.surfaceColor, borderRadius: 16, borderWidth: 1, borderColor: theme.borderColor, paddingHorizontal: 16 }]}
-            onPress={(e) => { e.stopPropagation(); onMessage && onMessage(); }}
-          >
-            <MaterialCommunityIcons name="message-text-outline" size={20} color={theme.primaryColor} />
-            <Text style={[styles.actionButtonText, { color: theme.primaryColor, marginLeft: 6 }]}>Message</Text>
-          </TouchableOpacity>
         )}
       </View>
+
+      {/* Name with checkmark */}
+      <View style={styles.nameRow}>
+        <Text style={[styles.connectionName, { color: theme.textColor }]} numberOfLines={1}> 
+          {item.name}
+        </Text>
+        <MaterialCommunityIcons name="check-circle" size={14} color={theme.primaryColor} />
+      </View>
+
+      {/* Title/Description */}
+      <Text style={[styles.connectionTitle, { color: theme.textSecondaryColor }]} numberOfLines={2}> 
+        {item.title}
+      </Text>
+
+      {/* Mutual Connections with small avatar */}
+      <View style={styles.mutualConnectionsRow}>
+        <Image source={item.avatar} style={styles.smallAvatar} />
+        <Text style={[styles.mutualConnections, { color: theme.textTertiaryColor }]} numberOfLines={1}> 
+          {item.mutualConnections} mutual connections
+        </Text>
+      </View>
+
+      {/* Connect Button at Bottom */}
+      <TouchableOpacity 
+        style={[styles.connectButton, { borderColor: theme.primaryColor }]}
+        onPress={(e) => { e.stopPropagation(); onConnect && onConnect(); }}
+      >
+        <Text style={[styles.connectButtonText, { color: theme.primaryColor }]}>Connect</Text>
+      </TouchableOpacity>
     </TouchableOpacity>
   );
 }
 
 const styles = StyleSheet.create({
   connectionCard: {
-    padding: 20,
-    borderRadius: 16,
+    padding: 12,
+    borderRadius: 12,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
-    shadowRadius: 6,
+    shadowRadius: 4,
     elevation: 3,
     backgroundColor: '#fff',
+    alignItems: 'center',
+    position: 'relative',
   },
-  connectionHeader: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    marginBottom: 12,
+  dismissButton: {
+    position: 'absolute',
+    top: 8,
+    right: 8,
+    zIndex: 1,
   },
   avatarContainer: {
     position: 'relative',
-    marginRight: 12,
+    marginBottom: 8,
   },
   avatar: {
     width: 48,
@@ -108,62 +103,73 @@ const styles = StyleSheet.create({
     position: 'absolute',
     bottom: 2,
     right: 2,
-    width: 12,
-    height: 12,
-    borderRadius: 6,
+    width: 10,
+    height: 10,
+    borderRadius: 5,
     backgroundColor: '#4CAF50',
     borderWidth: 2,
     borderColor: '#fff',
   },
-  connectionInfo: {
-    flex: 1,
-    minWidth: 0,
+  openToWorkBadge: {
+    position: 'absolute',
+    top: -4,
+    left: -4,
+    right: -4,
+    bottom: -4,
+    borderRadius: 28,
+    backgroundColor: '#4CAF50',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 8,
+  },
+  openToWorkText: {
+    color: '#fff',
+    fontSize: 8,
+    fontWeight: 'bold',
+  },
+  nameRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 4,
+    gap: 4,
   },
   connectionName: {
-    fontSize: 18,
+    fontSize: 13,
     fontWeight: 'bold',
-    marginBottom: 4,
+    textAlign: 'center',
   },
   connectionTitle: {
-    fontSize: 15,
-    fontWeight: '600',
-    marginBottom: 2,
+    fontSize: 11,
+    fontWeight: '400',
+    marginBottom: 6,
+    textAlign: 'center',
+    lineHeight: 14,
   },
-  connectionCompany: {
-    fontSize: 14,
-    marginBottom: 2,
+  mutualConnectionsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 8,
+    gap: 4,
+  },
+  smallAvatar: {
+    width: 16,
+    height: 16,
+    borderRadius: 8,
   },
   mutualConnections: {
-    fontSize: 13,
-    marginTop: 2,
+    fontSize: 10,
   },
-  connectionActionsRow: {
-    flexDirection: 'row',
-    justifyContent: 'flex-end',
-    alignItems: 'center',
-    marginTop: 10,
-    gap: 12,
-  },
-  pendingActions: {
-    flexDirection: 'row',
-    gap: 8,
-  },
-  actionButton: {
+  connectButton: {
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 16,
     borderWidth: 1,
-  },
-  actionButtonText: {
-    fontSize: 12,
-    fontWeight: '600',
-  },
-  messageButton: {
-    flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingVertical: 6,
-    borderRadius: 16,
-    borderWidth: 1,
+    width: '100%',
+  },
+  connectButtonText: {
+    fontSize: 11,
+    fontWeight: '600',
+    textAlign: 'center',
   },
 }); 

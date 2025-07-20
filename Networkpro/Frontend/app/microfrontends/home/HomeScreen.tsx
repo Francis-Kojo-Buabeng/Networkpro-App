@@ -25,8 +25,12 @@ import VideoPlayer from '../../../components/VideoPlayer';
 import { useStories } from '../../../contexts/StoriesContext';
 import { useTabBarVisibility } from '../../../contexts/TabBarVisibilityContext';
 import { useCurrentTheme } from '../../../contexts/ThemeContext';
+import { useProfileNavigation } from '../../../contexts/ProfileNavigationContext';
 import MeScreen from './MeScreen';
 import Sidebar from './Sidebar';
+import {
+  HomeSearchHeader
+} from './components';
 
 const { width } = Dimensions.get('window');
 
@@ -167,6 +171,7 @@ export default function HomeScreen({ userAvatar }: HomeScreenProps) {
   const theme = useCurrentTheme();
   const { tabBarTranslateY } = useTabBarVisibility();
   const { stories } = useStories();
+  const { openProfile } = useProfileNavigation();
   const [searchQuery, setSearchQuery] = useState('');
   const [showDashboard, setShowDashboard] = useState(false);
   const [suggestedConnections, setSuggestedConnections] = useState<SuggestedConnection[]>(initialSuggestedConnections);
@@ -190,20 +195,21 @@ export default function HomeScreen({ userAvatar }: HomeScreenProps) {
     isOnline: true,
     isConnected: false,
     isPending: false,
+    isSuggested: false,
     location: 'San Francisco, CA',
     about: 'Experienced professional passionate about networking and growth.',
     experience: [
       { id: '1', title: 'Senior Developer', company: user.company || 'Company', duration: '2 yrs', description: 'Worked on various projects.' }
     ],
     education: [
-      { id: '1', degree: 'B.Sc. Computer Science', school: 'University', year: '2018' }
+      { id: '1', degree: 'Bachelor\'s Degree', school: 'University', year: '2020' }
     ],
-    skills: ['Networking', 'React Native', 'Leadership'],
+    skills: ['JavaScript', 'React', 'Node.js', 'TypeScript'],
   });
 
   const handleProfilePress = (user: any) => {
-    setSelectedProfile(buildProfile(user));
-    setProfileModalVisible(true);
+    const profileData = buildProfile(user);
+    openProfile(profileData);
   };
 
   const handleConnect = (id: number, name: string) => {
@@ -359,34 +365,13 @@ export default function HomeScreen({ userAvatar }: HomeScreenProps) {
         scrollEventThrottle={16}
       >
       {/* Header */}
-        <View style={[styles.header, { backgroundColor: theme.surfaceColor }]}>
-        <View style={styles.headerTop}>
-          <TouchableOpacity style={styles.profileButton} onPress={() => setShowDashboard(true)}>
-            <Image 
-              source={userAvatar ? { uri: userAvatar } : require('@/assets/images/default-avator.jpg')} 
-                style={[styles.profilePicture, { borderColor: theme.primaryColor }]} 
-            />
-            </TouchableOpacity>
-            
-                      <View style={[styles.searchContainer, { backgroundColor: theme.inputBackgroundColor }]}>
-            <MaterialCommunityIcons name="magnify" size={20} color={theme.textSecondaryColor} style={styles.searchIcon} />
-            <TextInput
-              style={[styles.searchInput, { color: theme.textColor }]}
-              placeholder="Search jobs, people..."
-              placeholderTextColor={theme.placeholderColor}
-              value={searchQuery}
-              onChangeText={setSearchQuery}
-            />
-          </View>
-            
-            <TouchableOpacity 
-              style={styles.headerButton}
-              onPress={() => setNotificationModalVisible(true)}
-            >
-              <MaterialCommunityIcons name="bell-outline" size={24} color={theme.textColor} />
-            </TouchableOpacity>
-          </View>
-        </View>
+        <HomeSearchHeader
+          searchQuery={searchQuery}
+          onSearchChange={setSearchQuery}
+          onProfilePress={() => setShowDashboard(true)}
+          onNotificationPress={() => setNotificationModalVisible(true)}
+          userAvatar={userAvatar}
+        />
         {/* Stories Section */}
         <View style={[styles.section, { marginTop: -8 }]}>
           <Text style={[styles.sectionTitle, { color: theme.textColor }]}>Stories</Text>

@@ -8,6 +8,7 @@ import {
   View,
 } from 'react-native';
 import ProfileModal from '../../../components/ProfileModal';
+import NotificationModal from '../../../components/NotificationModal';
 import { useCurrentTheme } from '../../../contexts/ThemeContext';
 import {
   CompanyModal,
@@ -134,6 +135,7 @@ export default function JobsScreen({ userAvatar }: JobsScreenProps) {
   const [selectedProfile, setSelectedProfile] = useState<any | null>(null);
   const [companyModalVisible, setCompanyModalVisible] = useState(false);
   const [selectedCompany, setSelectedCompany] = useState<CompanyProfile | null>(null);
+  const [notificationModalVisible, setNotificationModalVisible] = useState(false);
 
   // Company profile data
   const companyProfiles: { [key: string]: CompanyProfile } = {
@@ -272,9 +274,12 @@ export default function JobsScreen({ userAvatar }: JobsScreenProps) {
                          job.location.toLowerCase().includes(searchQuery.toLowerCase());
     
     const matchesType = selectedJobType === 'All' || job.type === selectedJobType;
-    const matchesLocation = selectedLocation === 'All' || 
-                           selectedLocation === 'Remote' ? job.location.includes('Remote') :
-                           job.location.includes(selectedLocation);
+    const matchesLocation =
+      selectedLocation === 'All'
+        ? true
+        : selectedLocation === 'Remote'
+          ? job.location.includes('Remote')
+          : job.location.includes(selectedLocation);
     
     return matchesSearch && matchesType && matchesLocation;
   });
@@ -314,6 +319,7 @@ export default function JobsScreen({ userAvatar }: JobsScreenProps) {
         onProfilePress={() => handleProfilePress({ name: 'Current User', avatar: userAvatar ? { uri: userAvatar } : require('@/assets/images/default-avator.jpg') })}
         userAvatar={userAvatar}
         showFilters={showFilters}
+        onNotificationPress={() => setNotificationModalVisible(true)}
       />
 
       {/* Filters */}
@@ -365,6 +371,12 @@ export default function JobsScreen({ userAvatar }: JobsScreenProps) {
         visible={companyModalVisible}
         onClose={() => setCompanyModalVisible(false)}
         company={selectedCompany}
+      />
+
+      {/* Notification Modal */}
+      <NotificationModal
+        visible={notificationModalVisible}
+        onClose={() => setNotificationModalVisible(false)}
       />
     </View>
   );

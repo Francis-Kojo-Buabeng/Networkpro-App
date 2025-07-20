@@ -45,4 +45,4 @@ public class UserProfileUpdateDto {
     private String currentPosition;
     private String currentCompany;
     private List<String> skills;
-} 
+}

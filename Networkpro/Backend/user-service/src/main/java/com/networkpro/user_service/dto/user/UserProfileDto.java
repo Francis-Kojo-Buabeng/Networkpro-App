@@ -19,9 +19,7 @@ import jakarta.validation.constraints.NotBlank;
 public class UserProfileDto {
     private Long id;
 
-<<<<<<< HEAD
-    @NotBlank(message = "Full name is required")
-    @Size(max = 100, message = "Full name must be at most 100 characters")
+    <<<<<<<HEAD @NotBlank(message="Full name is required")@Size(max=100,message="Full name must be at most 100 characters")
     private String fullName;
 
     @NotBlank(message = "Email is required")
@@ -33,7 +31,7 @@ public class UserProfileDto {
     @NotBlank(message = "Last name is required")
     private String lastName;
 
->>>>>>> c725ed53c12d29997f15d402a39501f72ae3b4bb
+    >>>>>>>c725ed53c12d29997f15d402a39501f72ae3b4bb
     private String headline;
     private String summary;
     private String location;
@@ -58,4 +56,4 @@ public class UserProfileDto {
     private boolean isProfileComplete;
     private java.time.LocalDateTime createdAt;
     private java.time.LocalDateTime updatedAt;
-} 
+}

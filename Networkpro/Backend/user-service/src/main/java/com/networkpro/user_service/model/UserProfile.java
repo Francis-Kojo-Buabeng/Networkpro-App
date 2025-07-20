@@ -21,25 +21,25 @@ public class UserProfile {
     private String bio;
     private String location;
     private String profilePictureUrl;
-    
+
     // Profile completion tracking
     private int profileCompletionPercentage;
     private LocalDateTime profileCreatedAt;
     private LocalDateTime profileUpdatedAt;
-    
+
     // Contact information
     private String phoneNumber;
     private String website;
     private String linkedinUrl;
     private String githubUrl;
-    
+
     // Privacy settings
     private boolean profilePublic;
     private boolean contactInfoPublic;
     private boolean workExperiencePublic;
     private boolean educationPublic;
     private boolean skillsPublic;
-    
+
     // Professional information
     private String currentPosition;
     private String currentCompany;
@@ -51,43 +51,51 @@ public class UserProfile {
     @Column(name = "skill")
     @Builder.Default
     private Set<String> skills = new HashSet<>();
-    
+
     // Relationships
     @OneToMany(mappedBy = "userProfile", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
     private Set<WorkExperience> workExperiences = new HashSet<>();
-    
+
     @OneToMany(mappedBy = "userProfile", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
     private Set<Education> education = new HashSet<>();
-    
+
     @OneToMany(mappedBy = "userProfile", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
     private Set<Certification> certifications = new HashSet<>();
-    
+
     @PrePersist
     protected void onCreate() {
         profileCreatedAt = LocalDateTime.now();
         profileUpdatedAt = LocalDateTime.now();
         calculateProfileCompletion();
     }
-    
+
     @PreUpdate
     protected void onUpdate() {
         profileUpdatedAt = LocalDateTime.now();
         calculateProfileCompletion();
     }
-    
+
     private void calculateProfileCompletion() {
         int completion = 0;
-        if (fullName != null && !fullName.trim().isEmpty()) completion += 20;
-        if (bio != null && !bio.trim().isEmpty()) completion += 15;
-        if (location != null && !location.trim().isEmpty()) completion += 10;
-        if (profilePictureUrl != null && !profilePictureUrl.trim().isEmpty()) completion += 15;
-        if (currentPosition != null && !currentPosition.trim().isEmpty()) completion += 10;
-        if (currentCompany != null && !currentCompany.trim().isEmpty()) completion += 10;
-        if (!skills.isEmpty()) completion += 10;
-        if (!workExperiences.isEmpty()) completion += 10;
+        if (fullName != null && !fullName.trim().isEmpty())
+            completion += 20;
+        if (bio != null && !bio.trim().isEmpty())
+            completion += 15;
+        if (location != null && !location.trim().isEmpty())
+            completion += 10;
+        if (profilePictureUrl != null && !profilePictureUrl.trim().isEmpty())
+            completion += 15;
+        if (currentPosition != null && !currentPosition.trim().isEmpty())
+            completion += 10;
+        if (currentCompany != null && !currentCompany.trim().isEmpty())
+            completion += 10;
+        if (!skills.isEmpty())
+            completion += 10;
+        if (!workExperiences.isEmpty())
+            completion += 10;
         this.profileCompletionPercentage = Math.min(completion, 100);
     }
-} 
+}
