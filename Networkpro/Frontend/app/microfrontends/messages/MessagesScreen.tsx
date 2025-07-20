@@ -1,19 +1,24 @@
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import React, { useState } from 'react';
 import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  TouchableOpacity,
-  Image,
-  TextInput,
-  FlatList,
   Dimensions,
+  FlatList,
+  Image,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View
 } from 'react-native';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { useCurrentTheme } from '../../../contexts/ThemeContext';
 import MessageModal from '../../../components/MessageModal';
+import NewMessageButton from '../../../components/NewMessageButton';
 import ProfileModal from '../../../components/ProfileModal';
+import NotificationModal from '../../../components/NotificationModal';
+import { useCurrentTheme } from '../../../contexts/ThemeContext';
+import { useProfileNavigation } from '../../../contexts/ProfileNavigationContext';
+import {
+  MessageSearchHeader
+} from './components';
 
 const { width } = Dimensions.get('window');
 
@@ -46,12 +51,15 @@ interface MessagesScreenProps {
 
 export default function MessagesScreen({ userAvatar }: MessagesScreenProps) {
   const theme = useCurrentTheme();
+  const { openProfile } = useProfileNavigation();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedFilter, setSelectedFilter] = useState<'all' | 'unread' | 'pinned'>('all');
+  const [showFilters, setShowFilters] = useState(false);
   const [selectedConversation, setSelectedConversation] = useState<Conversation | null>(null);
   const [messageModalVisible, setMessageModalVisible] = useState(false);
   const [profileModalVisible, setProfileModalVisible] = useState(false);
   const [selectedProfile, setSelectedProfile] = useState<any | null>(null);
+  const [notificationModalVisible, setNotificationModalVisible] = useState(false);
   const [conversations, setConversations] = useState<Conversation[]>([
     {
       id: '1',
@@ -252,24 +260,25 @@ export default function MessagesScreen({ userAvatar }: MessagesScreenProps) {
     title: user.title || 'Professional',
     company: user.company || '',
     avatar: user.avatar,
-    mutualConnections: 12,
+    mutualConnections: 8,
     isOnline: user.isOnline || false,
-    isConnected: false,
+    isConnected: true,
     isPending: false,
+    isSuggested: false,
     location: 'San Francisco, CA',
-    about: 'Experienced professional passionate about networking and growth.',
+    about: 'Experienced professional with strong communication skills.',
     experience: [
-      { id: '1', title: 'Senior Developer', company: user.company || 'Company', duration: '2 yrs', description: 'Worked on various projects.' }
+      { id: '1', title: 'Senior Professional', company: user.company || 'Company', duration: '3 yrs', description: 'Led various initiatives and projects.' }
     ],
     education: [
-      { id: '1', degree: 'B.Sc. Computer Science', school: 'University', year: '2018' }
+      { id: '1', degree: 'Master\'s Degree', school: 'University', year: '2019' }
     ],
-    skills: ['Networking', 'React Native', 'Leadership'],
+    skills: ['Communication', 'Leadership', 'Project Management', 'Networking'],
   });
 
   const handleProfilePress = (user: any) => {
-    setSelectedProfile(buildProfile(user));
-    setProfileModalVisible(true);
+    const profileData = buildProfile(user);
+    openProfile(profileData);
   };
 
   const handleConversationPress = (conversation: Conversation) => {
@@ -411,49 +420,28 @@ export default function MessagesScreen({ userAvatar }: MessagesScreenProps) {
   return (
     <View style={[styles.container, { backgroundColor: theme.backgroundColor }]}>
       {/* Header */}
-      <View style={[styles.header, { backgroundColor: theme.surfaceColor }]}>
-        <View style={styles.headerTop}>
-          <View style={styles.headerLeft}>
-            <Image 
-              source={userAvatar ? { uri: userAvatar } : require('@/assets/images/Avator-Image.jpg')} 
-              style={[styles.profilePicture, { borderColor: theme.primaryColor }]} 
-            />
-            <Text style={[styles.headerTitle, { color: theme.textColor }]}>Messages</Text>
-          </View>
-          
-          <View style={styles.headerActions}>
-            <TouchableOpacity style={styles.headerButton}>
-              <MaterialCommunityIcons name="magnify" size={24} color={theme.textColor} />
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.headerButton}>
-              <MaterialCommunityIcons name="plus" size={24} color={theme.textColor} />
-            </TouchableOpacity>
-          </View>
-        </View>
+      <MessageSearchHeader
+        searchQuery={searchQuery}
+        onSearchChange={setSearchQuery}
+        onFilterToggle={() => setShowFilters(!showFilters)}
+        onProfilePress={() => handleProfilePress({ name: 'Current User', avatar: userAvatar ? { uri: userAvatar } : require('@/assets/images/default-avator.jpg') })}
+        onNotificationPress={() => setNotificationModalVisible(true)}
+        userAvatar={userAvatar}
+        showFilters={showFilters}
+      />
 
-        {/* Search */}
-        <View style={[styles.searchContainer, { backgroundColor: theme.inputBackgroundColor }]}>
-          <MaterialCommunityIcons name="magnify" size={20} color={theme.textSecondaryColor} />
-          <TextInput
-            style={[styles.searchInput, { color: theme.textColor }]}
-            placeholder="Search messages..."
-            placeholderTextColor={theme.placeholderColor}
-            value={searchQuery}
-            onChangeText={setSearchQuery}
-          />
-        </View>
-
-        {/* Filters */}
+      {/* Filters */}
+      {showFilters && (
         <View style={styles.filtersContainer}>
           {renderFilterButton('all', 'All', 'message-text')}
           {renderFilterButton('unread', 'Unread', 'email-outline')}
           {renderFilterButton('pinned', 'Pinned', 'pin')}
         </View>
-      </View>
+      )}
 
       {/* Conversations List */}
       <FlatList
-        data={filteredConversations}
+        data={filteredConversations || []}
         renderItem={renderConversation}
         keyExtractor={(item) => item.id}
         style={styles.conversationsList}
@@ -504,6 +492,10 @@ export default function MessagesScreen({ userAvatar }: MessagesScreenProps) {
           profile={selectedProfile}
         />
       )}
+      <NotificationModal
+        visible={notificationModalVisible}
+        onClose={() => setNotificationModalVisible(false)}
+      />
     </View>
   );
 }
@@ -676,5 +668,28 @@ const styles = StyleSheet.create({
     fontSize: 14,
     marginTop: 8,
     textAlign: 'center',
+  },
+  headerTopRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 12,
+  },
+  headerSearchWrapper: {
+    flex: 1,
+    marginHorizontal: 8,
+  },
+  headerSearchContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderRadius: 8,
+    paddingHorizontal: 8,
+    height: 36,
+  },
+  headerSearchInput: {
+    flex: 1,
+    marginLeft: 6,
+    fontSize: 15,
+    paddingVertical: 0,
   },
 }); 

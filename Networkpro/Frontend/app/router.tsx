@@ -1,14 +1,17 @@
-import React, { useState, useEffect } from 'react';
 import { useRouter } from 'expo-router';
+import React, { useEffect, useState } from 'react';
+import { StoriesProvider } from '../contexts/StoriesContext';
 import { ThemeProvider } from '../contexts/ThemeContext';
-import SplashScreen from './shell/SplashScreen';
-import OnboardingScreen from './shell/OnboardingScreen';
-import WelcomeScreen from './shell/WelcomeScreen';
-import SignUpScreen from './shell/SignUpScreen';
-import SignInScreen from './shell/SignInScreen';
-import ForgotPasswordScreen from './shell/ForgotPasswordScreen';
-import AppNavigator from './shell/AppNavigator';
+import { ProfileNavigationProvider, useProfileNavigation } from '../contexts/ProfileNavigationContext';
 import ProfileSetupScreen from './microfrontends/profile/ProfileSetupScreen';
+import ProfileScreen from './microfrontends/profile/ProfileScreen';
+import AppNavigator from './shell/AppNavigator';
+import ForgotPasswordScreen from './shell/ForgotPasswordScreen';
+import OnboardingScreen from './shell/OnboardingScreen';
+import SignInScreen from './shell/SignInScreen';
+import SignUpScreen from './shell/SignUpScreen';
+import SplashScreen from './shell/SplashScreen';
+import WelcomeScreen from './shell/WelcomeScreen';
 
 export default function Router() {
   const [currentScreen, setCurrentScreen] = useState('splash');
@@ -22,23 +25,27 @@ export default function Router() {
 
   return (
     <ThemeProvider>
-      <RouterContent 
-        currentScreen={currentScreen}
-        setCurrentScreen={setCurrentScreen}
-        isLoading={isLoading}
-        setIsLoading={setIsLoading}
-        hasSeenOnboarding={hasSeenOnboarding}
-        setHasSeenOnboarding={setHasSeenOnboarding}
-        isAuthenticated={isAuthenticated}
-        setIsAuthenticated={setIsAuthenticated}
-        isProfileComplete={isProfileComplete}
-        setIsProfileComplete={setIsProfileComplete}
-        userAvatar={userAvatar}
-        setUserAvatar={setUserAvatar}
-        isNavigating={isNavigating}
-        setIsNavigating={setIsNavigating}
-        router={router}
-      />
+      <StoriesProvider>
+        <ProfileNavigationProvider>
+          <RouterContent 
+            currentScreen={currentScreen}
+            setCurrentScreen={setCurrentScreen}
+            isLoading={isLoading}
+            setIsLoading={setIsLoading}
+            hasSeenOnboarding={hasSeenOnboarding}
+            setHasSeenOnboarding={setHasSeenOnboarding}
+            isAuthenticated={isAuthenticated}
+            setIsAuthenticated={setIsAuthenticated}
+            isProfileComplete={isProfileComplete}
+            setIsProfileComplete={setIsProfileComplete}
+            userAvatar={userAvatar}
+            setUserAvatar={setUserAvatar}
+            isNavigating={isNavigating}
+            setIsNavigating={setIsNavigating}
+            router={router}
+          />
+        </ProfileNavigationProvider>
+      </StoriesProvider>
     </ThemeProvider>
   );
 }
@@ -76,6 +83,7 @@ function RouterContent({
   setIsNavigating: (navigating: boolean) => void;
   router: any;
 }) {
+  const { showProfileScreen, selectedProfile, closeProfile, handleConnect, handleMessage } = useProfileNavigation();
 
   useEffect(() => {
     // Simulate splash screen delay
@@ -87,7 +95,7 @@ function RouterContent({
     }, 2000);
 
     return () => clearTimeout(timer);
-  }, [hasSeenOnboarding]);
+  }, []); // Only run once on mount
 
   // Navigation functions with proper state management and delays
   const navigateWithDelay = (screen: string) => {
@@ -146,6 +154,18 @@ function RouterContent({
 
   if (isLoading || currentScreen === 'splash') {
     return <SplashScreen />;
+  }
+
+  // Handle profile screen display
+  if (showProfileScreen && selectedProfile) {
+    return (
+      <ProfileScreen
+        profile={selectedProfile}
+        onBack={closeProfile}
+        onConnect={() => handleConnect(selectedProfile.id)}
+        onMessage={() => handleMessage(selectedProfile)}
+      />
+    );
   }
 
   console.log('Current screen:', currentScreen);

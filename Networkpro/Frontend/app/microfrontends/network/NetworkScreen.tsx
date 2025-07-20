@@ -1,18 +1,23 @@
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import React, { useState } from 'react';
 import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  TouchableOpacity,
-  Image,
-  FlatList,
   Dimensions,
-  TextInput,
+  FlatList,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
 } from 'react-native';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { useCurrentTheme } from '../../../contexts/ThemeContext';
+import ConnectionCard from '../../../components/ConnectionCard';
+import MessageModal from '../../../components/MessageModal';
+import NetworkTabButton from '../../../components/NetworkTabButton';
 import ProfileModal from '../../../components/ProfileModal';
+import NotificationModal from '../../../components/NotificationModal';
+import { useCurrentTheme } from '../../../contexts/ThemeContext';
+import { useProfileNavigation } from '../../../contexts/ProfileNavigationContext';
+import {
+  NetworkSearchHeader
+} from './components';
 
 const { width } = Dimensions.get('window');
 
@@ -62,19 +67,16 @@ interface NetworkScreenProps {
 
 export default function NetworkScreen({ userAvatar }: NetworkScreenProps) {
   const theme = useCurrentTheme();
+  const { openProfile } = useProfileNavigation();
   const [activeTab, setActiveTab] = useState<'connections' | 'pending' | 'suggestions'>('connections');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedProfile, setSelectedProfile] = useState<Connection | null>(null);
   const [profileModalVisible, setProfileModalVisible] = useState(false);
+  const [messageModalVisible, setMessageModalVisible] = useState(false);
+  const [selectedConversation, setSelectedConversation] = useState<any>(null);
+  const [notificationModalVisible, setNotificationModalVisible] = useState(false);
 
-  const networkStats: NetworkStats = {
-    totalConnections: 847,
-    pendingRequests: 12,
-    newSuggestions: 23,
-    profileViews: 45,
-  };
-
-  const connections: Connection[] = [
+  const [connections, setConnections] = useState<Connection[]>([
     {
       id: '1',
       name: 'John Doe',
@@ -178,9 +180,9 @@ export default function NetworkScreen({ userAvatar }: NetworkScreenProps) {
       ],
       skills: ['UI/UX Design', 'Figma', 'User Research', 'Prototyping', 'Design Systems'],
     },
-  ];
+  ]);
 
-  const pendingRequests: Connection[] = [
+  const [pendingRequests, setPendingRequests] = useState<Connection[]>([
     {
       id: '4',
       name: 'Sarah Wilson',
@@ -245,9 +247,9 @@ export default function NetworkScreen({ userAvatar }: NetworkScreenProps) {
       ],
       skills: ['Machine Learning', 'Python', 'R', 'SQL', 'Deep Learning', 'Statistics'],
     },
-  ];
+  ]);
 
-  const suggestions: Connection[] = [
+  const [suggestions, setSuggestions] = useState<Connection[]>([
     {
       id: '6',
       name: 'Emma Davis',
@@ -344,7 +346,14 @@ export default function NetworkScreen({ userAvatar }: NetworkScreenProps) {
       ],
       skills: ['Operations Management', 'Process Optimization', 'Team Leadership', 'Project Management', 'Lean Six Sigma'],
     },
-  ];
+  ]);
+
+  const [networkStats, setNetworkStats] = useState<NetworkStats>({
+    totalConnections: 847,
+    pendingRequests: 12,
+    newSuggestions: 23,
+    profileViews: 45,
+  });
 
   const getCurrentData = () => {
     const allData = [...connections, ...pendingRequests, ...suggestions];
@@ -366,168 +375,131 @@ export default function NetworkScreen({ userAvatar }: NetworkScreenProps) {
     return filteredData;
   };
 
-  const renderConnection = ({ item }: { item: Connection }) => (
-    <TouchableOpacity
-      style={[styles.connectionCard, { backgroundColor: theme.cardColor }]}
-      onPress={() => {
-        setSelectedProfile(item);
-        setProfileModalVisible(true);
-      }}
-      activeOpacity={0.7}
-    >
-      <View style={styles.connectionHeader}>
-        <View style={styles.avatarContainer}>
-          <Image source={item.avatar} style={styles.avatar} />
-          {item.isOnline && <View style={styles.onlineIndicator} />}
-        </View>
-        
-        <View style={styles.connectionInfo}>
-          <Text style={[styles.connectionName, { color: theme.textColor }]}>
-            {item.name}
-          </Text>
-          <Text style={[styles.connectionTitle, { color: theme.textSecondaryColor }]}>
-            {item.title} at {item.company}
-          </Text>
-          <Text style={[styles.mutualConnections, { color: theme.textTertiaryColor }]}>
-            {item.mutualConnections} mutual connections
-          </Text>
-        </View>
-        
-        <View style={styles.connectionActions}>
-          {item.isPending ? (
-            <View style={styles.pendingActions}>
-              <TouchableOpacity 
-                style={[styles.actionButton, { backgroundColor: theme.primaryColor }]}
-                onPress={(e) => {
-                  e.stopPropagation();
-                  // Handle accept
-                }}
-              >
-                <Text style={[styles.actionButtonText, { color: '#fff' }]}>Accept</Text>
-              </TouchableOpacity>
-              <TouchableOpacity 
-                style={[styles.actionButton, { backgroundColor: theme.surfaceColor, borderColor: theme.borderColor }]}
-                onPress={(e) => {
-                  e.stopPropagation();
-                  // Handle ignore
-                }}
-              >
-                <Text style={[styles.actionButtonText, { color: theme.textColor }]}>Ignore</Text>
-              </TouchableOpacity>
-            </View>
-          ) : item.isSuggested ? (
-            <TouchableOpacity 
-              style={[styles.actionButton, { backgroundColor: theme.primaryColor }]}
-              onPress={(e) => {
-                e.stopPropagation();
-                // Handle connect
-              }}
-            >
-              <Text style={[styles.actionButtonText, { color: '#fff' }]}>Connect</Text>
-            </TouchableOpacity>
-          ) : (
-            <TouchableOpacity 
-              style={styles.messageButton}
-              onPress={(e) => {
-                e.stopPropagation();
-                // Handle message
-              }}
-            >
-              <MaterialCommunityIcons name="message-text-outline" size={20} color={theme.primaryColor} />
-            </TouchableOpacity>
-          )}
-        </View>
-      </View>
-    </TouchableOpacity>
-  );
-
-  const renderStatsCard = (title: string, value: number, icon: string, color: string) => (
-    <View style={[styles.statsCard, { backgroundColor: theme.cardColor }]}>
-      <View style={[styles.statsIcon, { backgroundColor: color }]}>
-        <MaterialCommunityIcons name={icon as any} size={20} color="#fff" />
-      </View>
-      <View style={styles.statsContent}>
-        <Text style={[styles.statsValue, { color: theme.textColor }]}>{value}</Text>
-        <Text style={[styles.statsTitle, { color: theme.textSecondaryColor }]}>{title}</Text>
-      </View>
-    </View>
-  );
-
-  const renderTabButton = (tab: 'connections' | 'pending' | 'suggestions', label: string, count: number) => (
-    <TouchableOpacity
-      style={[
-        styles.tabButton,
-        { 
-          backgroundColor: activeTab === tab ? theme.primaryColor : theme.surfaceColor,
-          borderColor: theme.borderColor
+  const handleMessage = (connection: Connection) => {
+    // Create a conversation object from the connection
+    const conversation = {
+      id: connection.id,
+      contactName: connection.name,
+      contactAvatar: connection.avatar,
+      contactTitle: connection.title,
+      contactCompany: connection.company,
+      isOnline: connection.isOnline,
+      messages: [
+        {
+          id: '1',
+          sender: connection.name,
+          senderAvatar: connection.avatar,
+          content: `Hi! I'm ${connection.name}, ${connection.title} at ${connection.company}. Nice to connect with you!`,
+          timestamp: 'Just now',
+          isFromMe: false,
         }
-      ]}
-      onPress={() => setActiveTab(tab)}
-    >
-      <Text style={[
-        styles.tabButtonText,
-        { color: activeTab === tab ? '#fff' : theme.textColor }
-      ]}>
-        {label}
-      </Text>
-      {count > 0 && (
-        <View style={[styles.tabBadge, { backgroundColor: activeTab === tab ? '#fff' : theme.primaryColor }]}>
-          <Text style={[styles.tabBadgeText, { color: activeTab === tab ? theme.primaryColor : '#fff' }]}>
-            {count}
-          </Text>
-        </View>
-      )}
-    </TouchableOpacity>
+      ]
+    };
+    
+    setSelectedConversation(conversation);
+    setMessageModalVisible(true);
+  };
+
+  const handleAccept = (connectionId: string) => {
+    // Move from pending to connections
+    const acceptedConnection = pendingRequests.find(conn => conn.id === connectionId);
+    if (acceptedConnection) {
+      const updatedConnection = { ...acceptedConnection, isPending: false, isConnected: true };
+      
+      setPendingRequests(prev => prev.filter(conn => conn.id !== connectionId));
+      setConnections(prev => [...prev, updatedConnection]);
+      
+      // Update network stats
+      setNetworkStats(prev => ({
+        ...prev,
+        totalConnections: prev.totalConnections + 1,
+        pendingRequests: prev.pendingRequests - 1,
+      }));
+    }
+  };
+
+  const handleIgnore = (connectionId: string) => {
+    // Remove from pending requests
+    const ignoredConnection = pendingRequests.find(conn => conn.id === connectionId);
+    if (ignoredConnection) {
+      setPendingRequests(prev => prev.filter(conn => conn.id !== connectionId));
+      
+      // Update network stats
+      setNetworkStats(prev => ({
+        ...prev,
+        pendingRequests: prev.pendingRequests - 1,
+      }));
+    }
+  };
+
+  const handleConnect = (connectionId: string) => {
+    const updatedData = getCurrentData().map(connection =>
+      connection.id === connectionId
+        ? { ...connection, isConnected: true, isPending: false, isSuggested: false }
+        : connection
+    );
+
+    if (activeTab === 'connections') {
+      setConnections(updatedData);
+    } else if (activeTab === 'pending') {
+      setPendingRequests(updatedData);
+    } else if (activeTab === 'suggestions') {
+      setSuggestions(updatedData);
+    }
+  };
+
+  const handleProfileCardPress = (connection: Connection) => {
+    // Create profile data for the ProfileScreen
+    const profileData = {
+      id: connection.id,
+      name: connection.name,
+      title: connection.title,
+      company: connection.company,
+      location: connection.location || 'Location not specified',
+      avatar: connection.avatar,
+      about: connection.about || 'No about information available.',
+      experience: connection.experience || [],
+      education: connection.education || [],
+      skills: connection.skills || [],
+      mutualConnections: connection.mutualConnections,
+      isConnected: connection.isConnected || false,
+      isOnline: connection.isOnline,
+      isPending: connection.isPending,
+      isSuggested: connection.isSuggested,
+    };
+    
+    openProfile(profileData);
+  };
+
+  const renderConnection = ({ item }: { item: Connection }) => (
+    <ConnectionCard
+      item={item}
+      theme={theme}
+      onPress={() => handleProfileCardPress(item)}
+      onAccept={() => handleAccept(item.id)}
+      onIgnore={() => handleIgnore(item.id)}
+      onConnect={() => handleConnect(item.id)}
+      onMessage={() => handleMessage(item)}
+    />
   );
 
   return (
     <View style={[styles.container, { backgroundColor: theme.backgroundColor }]}>
       {/* Header */}
-      <View style={[styles.header, { backgroundColor: theme.surfaceColor }]}>
-        <View style={styles.headerTop}>
-          <View style={styles.headerLeft}>
-            <Image 
-              source={userAvatar ? { uri: userAvatar } : require('@/assets/images/Avator-Image.jpg')} 
-              style={[styles.profilePicture, { borderColor: theme.primaryColor }]} 
-            />
-            <Text style={[styles.headerTitle, { color: theme.textColor }]}>My Network</Text>
-          </View>
-          
-          <TouchableOpacity style={styles.headerButton}>
-            <MaterialCommunityIcons name="magnify" size={24} color={theme.textColor} />
-          </TouchableOpacity>
-        </View>
-
-        {/* Search */}
-        <View style={[styles.searchContainer, { backgroundColor: theme.inputBackgroundColor }]}>
-          <MaterialCommunityIcons name="magnify" size={20} color={theme.textSecondaryColor} />
-          <TextInput
-            style={[styles.searchInput, { color: theme.textColor }]}
-            placeholder="Search your network..."
-            placeholderTextColor={theme.placeholderColor}
-            value={searchQuery}
-            onChangeText={setSearchQuery}
-          />
-        </View>
-      </View>
+      <NetworkSearchHeader
+        searchQuery={searchQuery}
+        onSearchChange={setSearchQuery}
+        onProfilePress={() => setProfileModalVisible(true)}
+        onNotificationPress={() => setNotificationModalVisible(true)}
+        userAvatar={userAvatar}
+      />
 
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
-        {/* Network Stats */}
-        <View style={styles.statsSection}>
-          <Text style={[styles.sectionTitle, { color: theme.textColor }]}>Network Overview</Text>
-          <View style={styles.statsGrid}>
-            {renderStatsCard('Connections', networkStats.totalConnections, 'account-group', '#0077B5')}
-            {renderStatsCard('Pending', networkStats.pendingRequests, 'clock-outline', '#FF6B35')}
-            {renderStatsCard('Suggestions', networkStats.newSuggestions, 'account-plus', '#4CAF50')}
-            {renderStatsCard('Profile Views', networkStats.profileViews, 'eye-outline', '#9C27B0')}
-          </View>
-        </View>
-
         {/* Tabs */}
         <View style={styles.tabsContainer}>
-          {renderTabButton('connections', 'Connections', connections.length)}
-          {renderTabButton('pending', 'Pending', pendingRequests.length)}
-          {renderTabButton('suggestions', 'Suggestions', suggestions.length)}
+          <NetworkTabButton label="Connections" count={connections.length} active={activeTab === 'connections'} onPress={() => setActiveTab('connections')} theme={theme} />
+          <NetworkTabButton label="Pending" count={pendingRequests.length} active={activeTab === 'pending'} onPress={() => setActiveTab('pending')} theme={theme} />
+          <NetworkTabButton label="Suggestions" count={suggestions.length} active={activeTab === 'suggestions'} onPress={() => setActiveTab('suggestions')} theme={theme} />
         </View>
 
         {/* Connections List */}
@@ -537,6 +509,8 @@ export default function NetworkScreen({ userAvatar }: NetworkScreenProps) {
             renderItem={renderConnection}
             keyExtractor={(item) => item.id}
             scrollEnabled={false}
+            numColumns={2}
+            columnWrapperStyle={styles.row}
             ListEmptyComponent={
               <View style={styles.emptyState}>
                 <MaterialCommunityIcons 
@@ -564,6 +538,24 @@ export default function NetworkScreen({ userAvatar }: NetworkScreenProps) {
           profile={selectedProfile}
         />
       )}
+
+      {/* Message Modal */}
+      {selectedConversation && (
+        <MessageModal
+          visible={messageModalVisible}
+          onClose={() => {
+            setMessageModalVisible(false);
+            setSelectedConversation(null);
+          }}
+          conversation={selectedConversation}
+        />
+      )}
+
+      {/* Notification Modal */}
+      <NotificationModal
+        visible={notificationModalVisible}
+        onClose={() => setNotificationModalVisible(false)}
+      />
     </View>
   );
 } 
@@ -573,19 +565,20 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   header: {
-    paddingTop: 25,
+    paddingTop: 40,
     paddingHorizontal: 20,
-    paddingBottom: 16,
   },
   headerTop: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 16,
+    marginBottom: 5,
   },
   headerLeft: {
     flexDirection: 'row',
     alignItems: 'center',
+    gap: 12,
+    flex: 1,
   },
   profilePicture: {
     width: 40,
@@ -593,6 +586,7 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     borderWidth: 2,
     marginRight: 12,
+    marginLeft: 0,
   },
   headerTitle: {
     fontSize: 24,
@@ -607,6 +601,11 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     paddingHorizontal: 12,
     height: 44,
+    marginBottom: 0,
+    flex: 1,
+  },
+  searchIcon: {
+    marginRight: 10,
   },
   searchInput: {
     flex: 1,
@@ -620,10 +619,15 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingVertical: 16,
   },
+  statsHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
   sectionTitle: {
     fontSize: 20,
     fontWeight: '700',
-    marginBottom: 16,
   },
   statsGrid: {
     flexDirection: 'row',
@@ -675,7 +679,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
   },
   tabButtonText: {
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: '600',
   },
   tabBadge: {
@@ -696,17 +700,19 @@ const styles = StyleSheet.create({
   },
   connectionCard: {
     marginBottom: 12,
-    padding: 16,
-    borderRadius: 12,
+    padding: 20,
+    borderRadius: 16,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
-    shadowRadius: 4,
+    shadowRadius: 6,
     elevation: 3,
+    backgroundColor: '#fff',
   },
   connectionHeader: {
     flexDirection: 'row',
-    alignItems: 'center',
+    alignItems: 'flex-start',
+    marginBottom: 12,
   },
   avatarContainer: {
     position: 'relative',
@@ -730,21 +736,32 @@ const styles = StyleSheet.create({
   },
   connectionInfo: {
     flex: 1,
+    minWidth: 0,
   },
   connectionName: {
-    fontSize: 16,
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 4,
+  },
+  connectionTitle: {
+    fontSize: 15,
     fontWeight: '600',
     marginBottom: 2,
   },
-  connectionTitle: {
+  connectionCompany: {
     fontSize: 14,
     marginBottom: 2,
   },
   mutualConnections: {
-    fontSize: 12,
+    fontSize: 13,
+    marginTop: 2,
   },
-  connectionActions: {
-    marginLeft: 12,
+  connectionActionsRow: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    alignItems: 'center',
+    marginTop: 10,
+    gap: 12,
   },
   pendingActions: {
     gap: 8,
@@ -760,7 +777,12 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   messageButton: {
-    padding: 8,
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 6,
+    borderRadius: 16,
+    borderWidth: 1,
   },
   emptyState: {
     alignItems: 'center',
@@ -770,5 +792,25 @@ const styles = StyleSheet.create({
     fontSize: 16,
     marginTop: 16,
     textAlign: 'center',
+  },
+  revealOverviewButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+    marginHorizontal: 20,
+    marginVertical: 16,
+    borderRadius: 12,
+    gap: 8,
+  },
+  revealOverviewText: {
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  row: {
+    justifyContent: 'space-between',
+    paddingHorizontal: 8,
+    gap: 4,
   },
 }); 

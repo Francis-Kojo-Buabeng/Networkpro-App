@@ -1,36 +1,33 @@
+import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
 import React, { useState } from 'react';
 import {
-  View,
-  Text,
-  TouchableOpacity,
   Image,
   StyleSheet,
-  Alert,
+  Text,
+  TouchableOpacity,
+  View
 } from 'react-native';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { useCurrentTheme } from '../contexts/ThemeContext';
 import StoryCreationScreen from '../app/microfrontends/story/StoryCreationScreen';
+import { Story as StoryType, useStories } from '../contexts/StoriesContext';
+import { useCurrentTheme } from '../contexts/ThemeContext';
 import UserProfileModal from './UserProfileModal';
 
 interface StoryButtonProps {
-  story: {
-    id: number;
-    name: string;
-    avatar: any;
-    hasStory: boolean;
-  };
+  story: StoryType;
   onPress?: () => void;
   isUserStory?: boolean;
 }
 
 export default function StoryButton({ story, onPress, isUserStory = false }: StoryButtonProps) {
   const theme = useCurrentTheme();
+  const { markStoryViewed } = useStories();
   const [showStoryCreation, setShowStoryCreation] = useState(false);
   const [showProfileModal, setShowProfileModal] = useState(false);
 
   // Mock user data for profile modal
   const getUserProfileData = () => ({
-    name: story.name,
+    name: story.userName,
     avatar: story.avatar,
     title: 'Software Engineer',
     company: 'Tech Company',
@@ -61,17 +58,13 @@ export default function StoryButton({ story, onPress, isUserStory = false }: Sto
 
   const handleStoryPress = () => {
     if (isUserStory) {
-      // Open story creation screen
       setShowStoryCreation(true);
-    } else if (story.hasStory) {
-      // Handle viewing other user's story
-      Alert.alert('View Story', `Viewing ${story.name}'s story...`);
+    } else if (story.media || story.text) {
+      markStoryViewed(story.id);
+      // TODO: Open story viewer modal here
     } else {
-      // Show user profile when there's no story
       setShowProfileModal(true);
     }
-    
-    // Call custom onPress if provided
     if (onPress) {
       onPress();
     }
@@ -85,27 +78,38 @@ export default function StoryButton({ story, onPress, isUserStory = false }: Sto
   return (
     <>
       <TouchableOpacity style={styles.storyItem} onPress={handleStoryPress}>
-        <View style={[
-          styles.storyAvatar, 
-          { borderColor: story.hasStory ? '#1877F2' : theme.borderColor }
-        ]}>
-          <Image source={story.avatar} style={styles.avatar} />
-          
-          {/* Story indicator for active stories */}
-          {story.hasStory && !isUserStory && (
-            <View style={styles.storyIndicator} />
-          )}
-          
-          {/* Add button for user's story */}
-          {isUserStory && (
-            <View style={styles.addStoryButton}>
-              <MaterialCommunityIcons name="plus" size={16} color="#fff" />
+        <View style={styles.storyAvatarWrap}>
+          {!isUserStory ? (
+            !story.viewed ? (
+              <LinearGradient
+                colors={['#f9ce34', '#ee2a7b', '#6228d7']}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={styles.gradientRing}
+              >
+                <View style={styles.avatarBorder}>
+                  <Image source={story.avatar} style={styles.avatar} />
+                </View>
+              </LinearGradient>
+            ) : (
+              <View style={styles.grayRing}>
+                <View style={styles.avatarBorder}>
+                  <Image source={story.avatar} style={styles.avatar} />
+                </View>
+              </View>
+            )
+          ) : (
+            <View style={styles.avatarBorder}>
+              <Image source={story.avatar} style={styles.avatar} />
+              {/* Add button for user's story */}
+              <View style={styles.addStoryButton}>
+                <MaterialCommunityIcons name="plus" size={16} color="#fff" />
+              </View>
             </View>
           )}
         </View>
-        
         <Text style={[styles.storyName, { color: theme.textColor }]} numberOfLines={1}>
-          {story.name}
+          {story.userName}
         </Text>
       </TouchableOpacity>
       
@@ -132,17 +136,34 @@ const styles = StyleSheet.create({
     marginRight: 5,
     width: 80,
   },
-  storyAvatar: {
-    width: 70,
-    height: 70,
-    borderRadius: 35,
-    borderWidth: 3,
+  storyAvatarWrap: {
+    alignItems: 'center',
+    justifyContent: 'center',
     marginBottom: 10,
+  },
+  gradientRing: {
+    width: 74,
+    height: 74,
+    borderRadius: 37,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  avatarBorder: {
+    width: 68,
+    height: 68,
+    borderRadius: 34,
+    backgroundColor: '#fff',
+    alignItems: 'center',
+    justifyContent: 'center',
     overflow: 'hidden',
   },
+  storyAvatar: {
+    // No longer used, replaced by storyAvatarWrap/gradientRing/avatarBorder
+  },
   avatar: {
-    width: '100%',
-    height: '100%',
+    width: 62,
+    height: 62,
+    borderRadius: 31,
   },
   storyName: {
     fontSize: 12,
@@ -150,7 +171,7 @@ const styles = StyleSheet.create({
   },
   storyIndicator: {
     position: 'absolute',
-    bottom: 4,
+    bottom: 8, // was 4, moved downward
     right: 4,
     width: 18,
     height: 18,
@@ -176,5 +197,13 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     borderWidth: 2,
     borderColor: '#fff',
+  },
+  grayRing: {
+    width: 74,
+    height: 74,
+    borderRadius: 37,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#d1d1d1',
   },
 }); 

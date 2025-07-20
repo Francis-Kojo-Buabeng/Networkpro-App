@@ -100,13 +100,13 @@ public class EducationService {
     // Find education by user and degree
     public List<Education> findEducationByUserAndDegree(Long userId, String degree) {
         log.info("Finding education for user {} with degree: {}", userId, degree);
-        return educationRepository.findByDegreeContainingIgnoreCase(degree);
+        return educationRepository.findByUserProfileIdAndDegreeContainingIgnoreCase(userId, degree);
     }
 
     // Find education by user and field of study
     public List<Education> findEducationByUserAndFieldOfStudy(Long userId, String fieldOfStudy) {
         log.info("Finding education for user {} in field: {}", userId, fieldOfStudy);
-        return educationRepository.findByFieldOfStudyContainingIgnoreCase(fieldOfStudy);
+        return educationRepository.findByUserProfileIdAndFieldOfStudyContainingIgnoreCase(userId, fieldOfStudy);
     }
 
     // Find completed education (has end date)

@@ -81,22 +81,24 @@ public class CertificationService {
         return certificationRepository.findByCredentialId(credentialId);
     }
 
-    // Find active certifications (not expired)
-    public List<Certification> findActiveCertifications() {
-        log.info("Finding all active certifications");
-        return certificationRepository.findActiveCertifications(LocalDate.now());
+    // Find active certifications (not expired) for a user
+    public List<Certification> findActiveCertificationsByUserId(Long userId) {
+        log.info("Finding all active certifications for user {}", userId);
+        return certificationRepository.findActiveCertificationsByUserId(userId, java.time.LocalDate.now());
     }
 
-    // Find expired certifications
-    public List<Certification> findExpiredCertifications() {
-        log.info("Finding all expired certifications");
-        return certificationRepository.findExpiredCertifications(LocalDate.now());
+    // Find expired certifications for a user
+    public List<Certification> findExpiredCertificationsByUserId(Long userId) {
+        log.info("Finding all expired certifications for user {}", userId);
+        return certificationRepository.findExpiredCertificationsByUserId(userId, java.time.LocalDate.now());
     }
 
-    // Find certifications expiring soon
-    public List<Certification> findCertificationsExpiringSoon(LocalDate startDate, LocalDate endDate) {
-        log.info("Finding certifications expiring between {} and {}", startDate, endDate);
-        return certificationRepository.findCertificationsExpiringBetween(startDate, endDate);
+    // Find certifications expiring soon for a user
+    public List<Certification> findCertificationsExpiringSoonByUserId(Long userId) {
+        log.info("Finding certifications expiring soon for user {}", userId);
+        java.time.LocalDate now = java.time.LocalDate.now();
+        java.time.LocalDate thirtyDaysFromNow = now.plusDays(30);
+        return certificationRepository.findCertificationsExpiringBetweenByUserId(userId, now, thirtyDaysFromNow);
     }
 
     // Find certifications by skills

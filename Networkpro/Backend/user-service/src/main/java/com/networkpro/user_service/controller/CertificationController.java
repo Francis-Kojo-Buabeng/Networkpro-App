@@ -92,7 +92,7 @@ public class CertificationController {
 
     @GetMapping("/valid")
     public ResponseEntity<List<CertificationDto>> getValidCertifications(@PathVariable Long userId) {
-        List<Certification> validCertifications = certificationService.findActiveCertifications();
+        List<Certification> validCertifications = certificationService.findActiveCertificationsByUserId(userId);
         List<CertificationDto> dtos = validCertifications.stream()
                 .map(mapper::toDto)
                 .collect(Collectors.toList());
@@ -101,7 +101,7 @@ public class CertificationController {
 
     @GetMapping("/expired")
     public ResponseEntity<List<CertificationDto>> getExpiredCertifications(@PathVariable Long userId) {
-        List<Certification> expiredCertifications = certificationService.findExpiredCertifications();
+        List<Certification> expiredCertifications = certificationService.findExpiredCertificationsByUserId(userId);
         List<CertificationDto> dtos = expiredCertifications.stream()
                 .map(mapper::toDto)
                 .collect(Collectors.toList());
@@ -110,7 +110,7 @@ public class CertificationController {
 
     @GetMapping("/expiring-soon")
     public ResponseEntity<List<CertificationDto>> getExpiringSoonCertifications(@PathVariable Long userId) {
-        List<Certification> expiringSoonCertifications = certificationService.getCertificationsExpiringSoon();
+        List<Certification> expiringSoonCertifications = certificationService.findCertificationsExpiringSoonByUserId(userId);
         List<CertificationDto> dtos = expiringSoonCertifications.stream()
                 .map(mapper::toDto)
                 .collect(Collectors.toList());

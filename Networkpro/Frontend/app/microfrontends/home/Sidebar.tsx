@@ -1,27 +1,45 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, Image, TouchableOpacity, Dimensions } from 'react-native';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
+import React, { useState } from 'react';
+import { Dimensions, Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useCurrentTheme } from '../../../contexts/ThemeContext';
 import SettingScreen from './SettingScreen';
+import NetworkOverviewModal from '../../../components/NetworkOverviewModal';
 
 const { width, height } = Dimensions.get('window');
 
 interface SidebarProps {
   userAvatar?: string | null;
   onClose: () => void;
+  onMePress?: () => void;
 }
 
 const sidebarItems = [
   { label: 'Home', icon: 'home-variant', active: true },
-  { label: 'Me', icon: 'account-circle-outline' },
+  { label: 'Network Overview', icon: 'chart-line' },
   { label: 'Discover', icon: 'compass-outline' },
   { label: 'Messages', icon: 'message-outline' },
   { label: 'Settings', icon: 'cog-outline' },
 ];
 
-export default function Sidebar({ userAvatar, onClose }: SidebarProps) {
+export default function Sidebar({ userAvatar, onClose, onMePress }: SidebarProps) {
   const theme = useCurrentTheme();
   const [showSettings, setShowSettings] = useState(false);
+  const [showNetworkOverview, setShowNetworkOverview] = useState(false);
+
+  const networkStats = {
+    totalConnections: 847,
+    pendingRequests: 12,
+    newSuggestions: 23,
+    profileViews: 45,
+  };
+
+  const handleSidebarItemPress = (label: string) => {
+    if (label === 'Settings') {
+      setShowSettings(true);
+    } else if (label === 'Network Overview') {
+      setShowNetworkOverview(true);
+    }
+  };
 
   return (
     <View style={styles.overlay}>
@@ -35,6 +53,14 @@ export default function Sidebar({ userAvatar, onClose }: SidebarProps) {
         </View>
       )}
       
+      {/* Network Overview Modal */}
+      <NetworkOverviewModal
+        visible={showNetworkOverview}
+        onClose={() => setShowNetworkOverview(false)}
+        networkStats={networkStats}
+        theme={theme}
+      />
+      
       {/* Sidebar - Only show when settings is not active */}
       {!showSettings && (
         <View style={[styles.sidebar, { backgroundColor: theme.surfaceColor }]}>
@@ -42,7 +68,7 @@ export default function Sidebar({ userAvatar, onClose }: SidebarProps) {
             <MaterialCommunityIcons name="close" size={24} color={theme.textSecondaryColor} />
           </TouchableOpacity>
           
-          <TouchableOpacity style={[styles.profilePicWrap, { borderColor: theme.primaryColor }]}>
+          <TouchableOpacity style={[styles.profilePicWrap, { borderColor: theme.primaryColor }]} onPress={onMePress}>
             <Image source={userAvatar ? { uri: userAvatar } : require('@/assets/images/Avator-Image.jpg')} style={styles.profilePic} />
           </TouchableOpacity>
           
@@ -54,7 +80,7 @@ export default function Sidebar({ userAvatar, onClose }: SidebarProps) {
                   styles.sidebarItem, 
                   { backgroundColor: item.active ? theme.cardColor : 'transparent' }
                 ]}
-                onPress={item.label === 'Settings' ? () => setShowSettings(true) : undefined}
+                onPress={() => handleSidebarItemPress(item.label)}
               >
                 <MaterialCommunityIcons 
                   name={item.icon as any} 

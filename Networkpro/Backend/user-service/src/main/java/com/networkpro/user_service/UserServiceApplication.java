@@ -1,7 +1,11 @@
 package com.networkpro.user_service;
 
+import com.networkpro.user_service.model.UserProfile;
+import com.networkpro.user_service.repository.UserProfileRepository;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.context.annotation.Bean;
+import java.util.Set;
 
 @SpringBootApplication
 public class UserServiceApplication {
@@ -10,4 +14,39 @@ public class UserServiceApplication {
 		SpringApplication.run(UserServiceApplication.class, args);
 	}
 
+	@Bean
+	public org.springframework.boot.CommandLineRunner addDefaultUser(UserProfileRepository userProfileRepository) {
+		return args -> {
+			String defaultEmail = "testuser@example.com";
+			if (!userProfileRepository.existsByEmail(defaultEmail)) {
+				UserProfile user = UserProfile.builder()
+						.email(defaultEmail)
+						.passwordHash("testpassword")
+						.fullName("Test User")
+						.bio("This is a default test user.")
+						.location("Test City")
+						.profilePictureUrl("")
+						.emailVerified(true)
+						.phoneNumber("123-456-7890")
+						.website("https://example.com")
+						.linkedinUrl("https://linkedin.com/in/testuser")
+						.githubUrl("https://github.com/testuser")
+						.profilePublic(true)
+						.contactInfoPublic(true)
+						.workExperiencePublic(true)
+						.educationPublic(true)
+						.skillsPublic(true)
+						.currentPosition("Developer")
+						.currentCompany("Test Company")
+						.industry("Software")
+						.headline("Testing is my passion!")
+						.skills(Set.of("Java", "Spring Boot", "PostgreSQL"))
+						.build();
+				userProfileRepository.save(user);
+				System.out.println("Default test user created: " + defaultEmail);
+			} else {
+				System.out.println("Default test user already exists: " + defaultEmail);
+			}
+		};
+	}
 }

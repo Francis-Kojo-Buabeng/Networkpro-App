@@ -14,18 +14,24 @@ import {
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useCurrentTheme } from '../../../contexts/ThemeContext';
 import ProfileModal from '../../../components/ProfileModal';
+import { useNavigation } from '@react-navigation/native';
 
 interface PostScreenProps {
   userAvatar?: string | null;
 }
 
 export default function PostScreen({ userAvatar }: PostScreenProps) {
+  const navigation = useNavigation();
   const [postText, setPostText] = useState('');
   const [selectedPrivacy, setSelectedPrivacy] = useState('Anyone');
   const [selectedMedia, setSelectedMedia] = useState<string[]>([]);
   const [profileModalVisible, setProfileModalVisible] = useState(false);
   const [selectedProfile, setSelectedProfile] = useState<any | null>(null);
   const theme = useCurrentTheme();
+
+  const handleClose = () => {
+    navigation.navigate('Network' as never);
+  };
 
   const handlePost = () => {
     if (postText.trim()) {
@@ -105,7 +111,7 @@ export default function PostScreen({ userAvatar }: PostScreenProps) {
       {/* Header */}
       <View style={[styles.header, { borderBottomColor: theme.borderColor }]}>
         <View style={styles.headerTop}>
-          <TouchableOpacity style={styles.closeButton}>
+          <TouchableOpacity style={styles.closeButton} onPress={handleClose}>
             <MaterialCommunityIcons name="close" size={24} color={theme.textColor} />
           </TouchableOpacity>
           <Text style={[styles.headerTitle, { color: theme.textColor }]}>Create a post</Text>

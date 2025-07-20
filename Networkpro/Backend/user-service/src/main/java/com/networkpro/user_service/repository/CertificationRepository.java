@@ -51,4 +51,16 @@ public interface CertificationRepository extends JpaRepository<Certification, Lo
     @Query("SELECT c FROM Certification c WHERE c.issueDate BETWEEN :startDate AND :endDate")
     List<Certification> findByIssueDateBetween(@Param("startDate") LocalDate startDate, 
                                              @Param("endDate") LocalDate endDate);
+
+    // Find active certifications for a user (not expired)
+    @Query("SELECT c FROM Certification c WHERE c.userProfile.id = :userProfileId AND (c.expirationDate IS NULL OR c.expirationDate > :currentDate)")
+    List<Certification> findActiveCertificationsByUserId(@Param("userProfileId") Long userProfileId, @Param("currentDate") LocalDate currentDate);
+
+    // Find expired certifications for a user
+    @Query("SELECT c FROM Certification c WHERE c.userProfile.id = :userProfileId AND c.expirationDate IS NOT NULL AND c.expirationDate <= :currentDate")
+    List<Certification> findExpiredCertificationsByUserId(@Param("userProfileId") Long userProfileId, @Param("currentDate") LocalDate currentDate);
+
+    // Find certifications expiring soon for a user
+    @Query("SELECT c FROM Certification c WHERE c.userProfile.id = :userProfileId AND c.expirationDate BETWEEN :startDate AND :endDate")
+    List<Certification> findCertificationsExpiringBetweenByUserId(@Param("userProfileId") Long userProfileId, @Param("startDate") LocalDate startDate, @Param("endDate") LocalDate endDate);
 } 
