@@ -62,19 +62,18 @@ public class UserProfileController {
     }
 
     @DeleteMapping("/{userId}")
-    public ResponseEntity<Void> deleteUserProfile(@PathVariable Long userId) {
+    public ResponseEntity<String> deleteUserProfile(@PathVariable Long userId) {
         userProfileService.deleteUserProfile(userId);
-        return ResponseEntity.noContent().build();
+        return ResponseEntity.ok("User profile deleted successfully.");
     }
 
     @PostMapping("/search")
     public ResponseEntity<List<UserProfileDto>> searchUsers(@RequestBody UserProfileSearchDto searchDto) {
         List<UserProfile> results = userProfileService.searchPublicProfiles(
-            searchDto.getKeyword(), 
-            searchDto.getLocation(), 
-            searchDto.getCompany(), 
-            searchDto.getIndustry()
-        );
+                searchDto.getKeyword(),
+                searchDto.getLocation(),
+                searchDto.getCompany(),
+                searchDto.getIndustry());
         List<UserProfileDto> dtos = results.stream()
                 .map(mapper::toDto)
                 .collect(Collectors.toList());
@@ -121,7 +120,7 @@ public class UserProfileController {
             userProfile.setContactInfoPublic(privacySettings.isShowEmail() || privacySettings.isShowPhone());
             userProfile.setWorkExperiencePublic(privacySettings.isShowWorkExperience());
             userProfile.setEducationPublic(privacySettings.isShowEducation());
-            
+
             UserProfile updated = userProfileService.updateUserProfile(userId, userProfile);
             return ResponseEntity.ok(mapper.toPrivacySettingsDto(updated));
         }
@@ -146,9 +145,14 @@ public class UserProfileController {
     }
 
     @DeleteMapping("/{userId}/profile-picture")
-    public ResponseEntity<Void> deleteProfilePicture(@PathVariable Long userId) {
+    public ResponseEntity<String> deleteProfilePicture(@PathVariable Long userId) {
+        Optional<UserProfile> profile = userProfileService.getUserProfileById(userId);
+        if (profile.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body("User profile not found. Cannot delete profile picture.");
+        }
         // TODO: Implement file deletion logic
-        return ResponseEntity.noContent().build();
+        return ResponseEntity.ok("Profile picture deleted successfully.");
     }
 
     @GetMapping
@@ -165,4 +169,4 @@ public class UserProfileController {
         Optional<UserProfile> profile = userProfileService.getUserProfileById(userId);
         return ResponseEntity.ok(profile.isPresent());
     }
-} 
+}

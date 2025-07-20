@@ -19,101 +19,112 @@ import java.util.stream.Collectors;
 @CrossOrigin(origins = "*")
 public class CertificationController {
 
-    private final CertificationService certificationService;
-    private final CertificationMapper mapper;
+        private final CertificationService certificationService;
+        private final CertificationMapper mapper;
+        private final com.networkpro.user_service.service.user.UserProfileService userProfileService;
 
-    @PostMapping
-    public ResponseEntity<CertificationDto> addCertification(
-            @PathVariable Long userId,
-            @RequestBody CertificationDto certificationDto) {
-        Certification certification = mapper.toEntity(certificationDto);
-        Certification created = certificationService.createCertification(certification);
-        return ResponseEntity.status(HttpStatus.CREATED).body(mapper.toDto(created));
-    }
+        @PostMapping
+        public ResponseEntity<CertificationDto> addCertification(
+                        @PathVariable Long userId,
+                        @RequestBody CertificationDto certificationDto) {
+                Optional<com.networkpro.user_service.model.UserProfile> userProfileOpt = userProfileService
+                                .getUserProfileById(userId);
+                if (userProfileOpt.isEmpty()) {
+                        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null); // Or a custom error message DTO
+                }
+                Certification certification = mapper.toEntity(certificationDto);
+                certification.setUserProfile(userProfileOpt.get());
+                Certification created = certificationService.createCertification(certification);
+                return ResponseEntity.status(HttpStatus.CREATED).body(mapper.toDto(created));
+        }
 
-    @GetMapping
-    public ResponseEntity<List<CertificationDto>> getUserCertifications(@PathVariable Long userId) {
-        List<Certification> certifications = certificationService.getCertificationsByUserId(userId);
-        List<CertificationDto> dtos = certifications.stream()
-                .map(mapper::toDto)
-                .collect(Collectors.toList());
-        return ResponseEntity.ok(dtos);
-    }
+        @GetMapping
+        public ResponseEntity<List<CertificationDto>> getUserCertifications(@PathVariable Long userId) {
+                List<Certification> certifications = certificationService.getCertificationsByUserId(userId);
+                List<CertificationDto> dtos = certifications.stream()
+                                .map(mapper::toDto)
+                                .collect(Collectors.toList());
+                return ResponseEntity.ok(dtos);
+        }
 
-    @GetMapping("/{certificationId}")
-    public ResponseEntity<CertificationDto> getCertification(
-            @PathVariable Long userId,
-            @PathVariable Long certificationId) {
-        Optional<Certification> certification = certificationService.getCertificationById(certificationId);
-        return certification.map(mapper::toDto)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
-    }
+        @GetMapping("/{certificationId}")
+        public ResponseEntity<CertificationDto> getCertification(
+                        @PathVariable Long userId,
+                        @PathVariable Long certificationId) {
+                Optional<Certification> certification = certificationService.getCertificationById(certificationId);
+                return certification.map(mapper::toDto)
+                                .map(ResponseEntity::ok)
+                                .orElse(ResponseEntity.notFound().build());
+        }
 
-    @PutMapping("/{certificationId}")
-    public ResponseEntity<CertificationDto> updateCertification(
-            @PathVariable Long userId,
-            @PathVariable Long certificationId,
-            @RequestBody CertificationDto certificationDto) {
-        Certification updatedCertification = mapper.toEntity(certificationDto);
-        Certification updated = certificationService.updateCertification(certificationId, updatedCertification);
-        return ResponseEntity.ok(mapper.toDto(updated));
-    }
+        @PutMapping("/{certificationId}")
+        public ResponseEntity<CertificationDto> updateCertification(
+                        @PathVariable Long userId,
+                        @PathVariable Long certificationId,
+                        @RequestBody CertificationDto certificationDto) {
+                Certification updatedCertification = mapper.toEntity(certificationDto);
+                Certification updated = certificationService.updateCertification(certificationId, updatedCertification);
+                return ResponseEntity.ok(mapper.toDto(updated));
+        }
 
-    @DeleteMapping("/{certificationId}")
-    public ResponseEntity<Void> deleteCertification(
-            @PathVariable Long userId,
-            @PathVariable Long certificationId) {
-        certificationService.deleteCertification(certificationId);
-        return ResponseEntity.noContent().build();
-    }
+        @DeleteMapping("/{certificationId}")
+        public ResponseEntity<String> deleteCertification(
+                        @PathVariable Long userId,
+                        @PathVariable Long certificationId) {
+                certificationService.deleteCertification(certificationId);
+                return ResponseEntity.ok("Certification deleted successfully.");
+        }
 
-    @GetMapping("/organization/{organization}")
-    public ResponseEntity<List<CertificationDto>> getCertificationsByOrganization(
-            @PathVariable Long userId,
-            @PathVariable String organization) {
-        List<Certification> certifications = certificationService.findCertificationsByUserAndOrganization(userId, organization);
-        List<CertificationDto> dtos = certifications.stream()
-                .map(mapper::toDto)
-                .collect(Collectors.toList());
-        return ResponseEntity.ok(dtos);
-    }
+        @GetMapping("/organization/{organization}")
+        public ResponseEntity<List<CertificationDto>> getCertificationsByOrganization(
+                        @PathVariable Long userId,
+                        @PathVariable String organization) {
+                List<Certification> certifications = certificationService.findCertificationsByUserAndOrganization(
+                                userId,
+                                organization);
+                List<CertificationDto> dtos = certifications.stream()
+                                .map(mapper::toDto)
+                                .collect(Collectors.toList());
+                return ResponseEntity.ok(dtos);
+        }
 
-    @GetMapping("/name/{name}")
-    public ResponseEntity<List<CertificationDto>> getCertificationsByName(
-            @PathVariable Long userId,
-            @PathVariable String name) {
-        List<Certification> certifications = certificationService.findCertificationsByName(name);
-        List<CertificationDto> dtos = certifications.stream()
-                .map(mapper::toDto)
-                .collect(Collectors.toList());
-        return ResponseEntity.ok(dtos);
-    }
+        @GetMapping("/name/{name}")
+        public ResponseEntity<List<CertificationDto>> getCertificationsByName(
+                        @PathVariable Long userId,
+                        @PathVariable String name) {
+                List<Certification> certifications = certificationService.findCertificationsByName(name);
+                List<CertificationDto> dtos = certifications.stream()
+                                .map(mapper::toDto)
+                                .collect(Collectors.toList());
+                return ResponseEntity.ok(dtos);
+        }
 
-    @GetMapping("/valid")
-    public ResponseEntity<List<CertificationDto>> getValidCertifications(@PathVariable Long userId) {
-        List<Certification> validCertifications = certificationService.findActiveCertificationsByUserId(userId);
-        List<CertificationDto> dtos = validCertifications.stream()
-                .map(mapper::toDto)
-                .collect(Collectors.toList());
-        return ResponseEntity.ok(dtos);
-    }
+        @GetMapping("/valid")
+        public ResponseEntity<List<CertificationDto>> getValidCertifications(@PathVariable Long userId) {
+                List<Certification> validCertifications = certificationService.findActiveCertificationsByUserId(userId);
+                List<CertificationDto> dtos = validCertifications.stream()
+                                .map(mapper::toDto)
+                                .collect(Collectors.toList());
+                return ResponseEntity.ok(dtos);
+        }
 
-    @GetMapping("/expired")
-    public ResponseEntity<List<CertificationDto>> getExpiredCertifications(@PathVariable Long userId) {
-        List<Certification> expiredCertifications = certificationService.findExpiredCertificationsByUserId(userId);
-        List<CertificationDto> dtos = expiredCertifications.stream()
-                .map(mapper::toDto)
-                .collect(Collectors.toList());
-        return ResponseEntity.ok(dtos);
-    }
+        @GetMapping("/expired")
+        public ResponseEntity<List<CertificationDto>> getExpiredCertifications(@PathVariable Long userId) {
+                List<Certification> expiredCertifications = certificationService
+                                .findExpiredCertificationsByUserId(userId);
+                List<CertificationDto> dtos = expiredCertifications.stream()
+                                .map(mapper::toDto)
+                                .collect(Collectors.toList());
+                return ResponseEntity.ok(dtos);
+        }
 
-    @GetMapping("/expiring-soon")
-    public ResponseEntity<List<CertificationDto>> getExpiringSoonCertifications(@PathVariable Long userId) {
-        List<Certification> expiringSoonCertifications = certificationService.findCertificationsExpiringSoonByUserId(userId);
-        List<CertificationDto> dtos = expiringSoonCertifications.stream()
-                .map(mapper::toDto)
-                .collect(Collectors.toList());
-        return ResponseEntity.ok(dtos);
-    }
-} 
+        @GetMapping("/expiring-soon")
+        public ResponseEntity<List<CertificationDto>> getExpiringSoonCertifications(@PathVariable Long userId) {
+                List<Certification> expiringSoonCertifications = certificationService
+                                .findCertificationsExpiringSoonByUserId(userId);
+                List<CertificationDto> dtos = expiringSoonCertifications.stream()
+                                .map(mapper::toDto)
+                                .collect(Collectors.toList());
+                return ResponseEntity.ok(dtos);
+        }
+}

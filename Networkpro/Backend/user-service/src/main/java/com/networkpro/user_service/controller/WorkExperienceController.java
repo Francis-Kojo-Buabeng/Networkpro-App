@@ -21,12 +21,19 @@ public class WorkExperienceController {
 
     private final WorkExperienceService workExperienceService;
     private final WorkExperienceMapper mapper;
+    private final com.networkpro.user_service.service.user.UserProfileService userProfileService;
 
     @PostMapping
     public ResponseEntity<WorkExperienceDto> addWorkExperience(
             @PathVariable Long userId,
             @RequestBody WorkExperienceDto workExperienceDto) {
+        Optional<com.networkpro.user_service.model.UserProfile> userProfileOpt = userProfileService
+                .getUserProfileById(userId);
+        if (userProfileOpt.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null); // Or a custom error message DTO
+        }
         WorkExperience workExperience = mapper.toEntity(workExperienceDto);
+        workExperience.setUserProfile(userProfileOpt.get());
         WorkExperience created = workExperienceService.createWorkExperience(workExperience);
         return ResponseEntity.status(HttpStatus.CREATED).body(mapper.toDto(created));
     }
@@ -61,18 +68,19 @@ public class WorkExperienceController {
     }
 
     @DeleteMapping("/{experienceId}")
-    public ResponseEntity<Void> deleteWorkExperience(
+    public ResponseEntity<String> deleteWorkExperience(
             @PathVariable Long userId,
             @PathVariable Long experienceId) {
         workExperienceService.deleteWorkExperience(experienceId);
-        return ResponseEntity.noContent().build();
+        return ResponseEntity.ok("Work experience deleted successfully.");
     }
 
     @GetMapping("/company/{company}")
     public ResponseEntity<List<WorkExperienceDto>> getWorkExperienceByCompany(
             @PathVariable Long userId,
             @PathVariable String company) {
-        List<WorkExperience> workExperiences = workExperienceService.findWorkExperiencesByUserAndCompany(userId, company);
+        List<WorkExperience> workExperiences = workExperienceService.findWorkExperiencesByUserAndCompany(userId,
+                company);
         List<WorkExperienceDto> dtos = workExperiences.stream()
                 .map(mapper::toDto)
                 .collect(Collectors.toList());
@@ -98,7 +106,8 @@ public class WorkExperienceController {
     public ResponseEntity<WorkExperienceDto> endCurrentPosition(
             @PathVariable Long experienceId,
             @RequestParam String endDate) {
-        WorkExperience updated = workExperienceService.endCurrentPosition(experienceId, java.time.LocalDate.parse(endDate));
+        WorkExperience updated = workExperienceService.endCurrentPosition(experienceId,
+                java.time.LocalDate.parse(endDate));
         return ResponseEntity.ok(mapper.toDto(updated));
     }
-} 
+}

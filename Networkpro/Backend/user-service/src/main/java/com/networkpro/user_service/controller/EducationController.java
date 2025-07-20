@@ -21,12 +21,19 @@ public class EducationController {
 
     private final EducationService educationService;
     private final EducationMapper mapper;
+    private final com.networkpro.user_service.service.user.UserProfileService userProfileService;
 
     @PostMapping
     public ResponseEntity<EducationDto> addEducation(
             @PathVariable Long userId,
             @RequestBody EducationDto educationDto) {
+        Optional<com.networkpro.user_service.model.UserProfile> userProfileOpt = userProfileService
+                .getUserProfileById(userId);
+        if (userProfileOpt.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null); // Or a custom error message DTO
+        }
         Education education = mapper.toEntity(educationDto);
+        education.setUserProfile(userProfileOpt.get());
         Education created = educationService.createEducation(education);
         return ResponseEntity.status(HttpStatus.CREATED).body(mapper.toDto(created));
     }
@@ -61,11 +68,11 @@ public class EducationController {
     }
 
     @DeleteMapping("/{educationId}")
-    public ResponseEntity<Void> deleteEducation(
+    public ResponseEntity<String> deleteEducation(
             @PathVariable Long userId,
             @PathVariable Long educationId) {
         educationService.deleteEducation(educationId);
-        return ResponseEntity.noContent().build();
+        return ResponseEntity.ok("Education deleted successfully.");
     }
 
     @GetMapping("/institution/{institution}")
@@ -100,4 +107,4 @@ public class EducationController {
                 .collect(Collectors.toList());
         return ResponseEntity.ok(dtos);
     }
-} 
+}
