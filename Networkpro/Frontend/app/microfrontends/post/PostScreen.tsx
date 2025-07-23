@@ -10,41 +10,223 @@ import {
   Alert,
   KeyboardAvoidingView,
   Platform,
+  Modal,
 } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import * as ImagePicker from 'expo-image-picker';
 import { useCurrentTheme } from '../../../contexts/ThemeContext';
 import ProfileModal from '../../../components/ProfileModal';
 import { useNavigation } from '@react-navigation/native';
+import { pickVideo, recordVideo } from '../../../services/videoPicker';
+import { pickDocument } from '../../../services/documentPicker';
+import { pickLocation } from '../../../services/locationPicker';
+import EventModal from './EventModal';
+import CelebrationModal from './CelebrationModal';
+import Snackbar from '../../../components/Snackbar';
+import { usePosts } from '../../contexts/PostsContext';
+import VideoPlayer from '../../../components/VideoPlayer';
+import * as VideoThumbnails from 'expo-video-thumbnails';
+import MyProfileScreen from '../profile/MyProfileScreen';
 
 interface PostScreenProps {
   userAvatar?: string | null;
+  userProfile?: any;
 }
 
-export default function PostScreen({ userAvatar }: PostScreenProps) {
+export default function PostScreen({ userAvatar, userProfile }: PostScreenProps) {
   const navigation = useNavigation();
+  const { addPost } = usePosts();
   const [postText, setPostText] = useState('');
   const [selectedPrivacy, setSelectedPrivacy] = useState('Anyone');
   const [selectedMedia, setSelectedMedia] = useState<string[]>([]);
   const [profileModalVisible, setProfileModalVisible] = useState(false);
   const [selectedProfile, setSelectedProfile] = useState<any | null>(null);
   const theme = useCurrentTheme();
+  const [selectedVideo, setSelectedVideo] = useState<string | null>(null);
+  const [selectedVideoThumbnail, setSelectedVideoThumbnail] = useState<string | null>(null);
+  const [selectedDocument, setSelectedDocument] = useState<{ name: string; uri: string } | null>(null);
+  const [selectedLocation, setSelectedLocation] = useState<any>(null);
+  const [eventModalVisible, setEventModalVisible] = useState(false);
+  const [selectedEvent, setSelectedEvent] = useState<{ title: string; date: string; description: string } | null>(null);
+  const [celebrationModalVisible, setCelebrationModalVisible] = useState(false);
+  const [selectedCelebration, setSelectedCelebration] = useState<{ key: string; label: string } | null>(null);
+  const [snackbar, setSnackbar] = useState<{ visible: boolean; message: string; type?: 'success' | 'error' | 'info' }>({ visible: false, message: '', type: 'info' });
+  const showSnackbar = (message: string, type: 'success' | 'error' | 'info' = 'info') => setSnackbar({ visible: true, message, type });
+  const [showMyProfileModal, setShowMyProfileModal] = useState(false);
 
   const handleClose = () => {
-    navigation.navigate('Network' as never);
+    navigation.goBack();
   };
 
   const handlePost = () => {
-    if (postText.trim()) {
-      Alert.alert('Success', 'Your post has been shared!');
+    const hasText = postText.trim().length > 0;
+    const hasImage = selectedMedia.length > 0;
+    const hasVideo = !!selectedVideo;
+    const hasDocument = !!selectedDocument;
+    const hasLocation = !!selectedLocation;
+    const hasEvent = !!selectedEvent;
+    const hasCelebration = !!selectedCelebration;
+
+    if (hasText || hasImage || hasVideo || hasDocument || hasLocation || hasEvent || hasCelebration) {
+      // Build new post object (add support for these media types as needed)
+      const newPost = {
+        id: Date.now(),
+        author: userProfile ? (userProfile.firstName + (userProfile.lastName ? ' ' + userProfile.lastName : '')) : 'You',
+        avatar: userProfile?.avatarUri ? { uri: userProfile.avatarUri } : (userAvatar ? { uri: userAvatar } : require('@/assets/images/Avator-Image.jpg')),
+        company: userProfile?.currentCompany || '',
+        time: 'Just now',
+        content: postText,
+        images: hasImage ? selectedMedia.map(uri => ({ uri })) : undefined,
+        video: hasVideo ? { uri: selectedVideo, thumbnail: selectedVideoThumbnail, duration: '' } : undefined,
+        document: hasDocument ? selectedDocument : undefined,
+        location: hasLocation ? selectedLocation : undefined,
+        event: hasEvent ? selectedEvent : undefined,
+        celebration: hasCelebration ? selectedCelebration : undefined,
+        likes: 0,
+        comments: 0,
+        shares: 0,
+      };
+      addPost(newPost);
+      showSnackbar('Your post has been shared!', 'success');
       setPostText('');
       setSelectedMedia([]);
+      setSelectedVideo(null);
+      setSelectedVideoThumbnail(null);
+      setSelectedDocument(null);
+      setSelectedLocation(null);
+      setSelectedEvent(null);
+      setSelectedCelebration(null);
+      navigation.goBack();
     } else {
-      Alert.alert('Error', 'Please write something to post');
+      showSnackbar('Please write something or add media to post', 'error');
     }
   };
 
-  const addMedia = (type: 'photo' | 'video' | 'document') => {
-    Alert.alert('Media', `${type.charAt(0).toUpperCase() + type.slice(1)} attachment feature coming soon!`);
+  const requestMediaPermissions = async () => {
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (status !== 'granted') {
+      showSnackbar('Please grant permission to access your photo library.', 'error');
+      return false;
+    }
+    return true;
+  };
+
+  const pickImage = async () => {
+    const hasPermission = await requestMediaPermissions();
+    if (!hasPermission) return;
+
+    try {
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsMultipleSelection: true,
+        aspect: [4, 3],
+        quality: 0.8,
+      });
+
+      if (!result.canceled && result.assets && result.assets.length > 0) {
+        const newImages = result.assets.map(asset => asset.uri);
+        setSelectedMedia(prev => [...prev, ...newImages]);
+      }
+    } catch (error) {
+      showSnackbar('Failed to pick image. Please try again.', 'error');
+    }
+  };
+
+  const takePhoto = async () => {
+    const { status } = await ImagePicker.requestCameraPermissionsAsync();
+    if (status !== 'granted') {
+      showSnackbar('Please grant permission to access your camera.', 'error');
+      return;
+    }
+
+    try {
+      const result = await ImagePicker.launchCameraAsync({
+        allowsEditing: true,
+        aspect: [4, 3],
+        quality: 0.8,
+      });
+
+      if (!result.canceled && result.assets && result.assets.length > 0) {
+        const newImage = result.assets[0].uri;
+        setSelectedMedia(prev => [...prev, newImage]);
+      }
+    } catch (error) {
+      showSnackbar('Failed to take photo. Please try again.', 'error');
+    }
+  };
+
+  const removeImage = (index: number) => {
+    setSelectedMedia(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const clearAllMedia = () => {
+    setSelectedMedia([]);
+  };
+
+  const pickVideoWithThumbnail = async () => {
+    const uri = await pickVideo();
+    if (uri) {
+      setSelectedVideo(uri);
+      try {
+        const { uri: thumbUri } = await VideoThumbnails.getThumbnailAsync(uri, { time: 1000 });
+        setSelectedVideoThumbnail(thumbUri);
+      } catch (e) {
+        setSelectedVideoThumbnail(null);
+      }
+    }
+  };
+
+  const addMedia = async (type: 'photo' | 'video' | 'document' | 'event' | 'location' | 'celebration') => {
+    if (type === 'photo') {
+      Alert.alert(
+        'Add Photo',
+        'Choose how you want to add a photo',
+        [
+          { text: 'Take Photo', onPress: takePhoto },
+          { text: 'Choose from Library', onPress: pickImage },
+          { text: 'Cancel', style: 'cancel' },
+        ]
+      );
+    } else if (type === 'video') {
+      Alert.alert(
+        'Add Video',
+        'Choose how you want to add a video',
+        [
+          { text: 'Record Video', onPress: async () => {
+            const uri = await recordVideo();
+            if (uri) {
+              setSelectedVideo(uri);
+              try {
+                const { uri: thumbUri } = await VideoThumbnails.getThumbnailAsync(uri, { time: 1000 });
+                setSelectedVideoThumbnail(thumbUri);
+              } catch (e) {
+                setSelectedVideoThumbnail(null);
+              }
+            }
+          }},
+          { text: 'Choose from Library', onPress: pickVideoWithThumbnail },
+          { text: 'Cancel', style: 'cancel' },
+        ]
+      );
+    } else if (type === 'document') {
+      const doc = await pickDocument();
+      if (doc && 'name' in doc && 'uri' in doc) setSelectedDocument({ name: String(doc.name), uri: String(doc.uri) });
+    } else if (type === 'location') {
+      const loc = await pickLocation();
+      if (loc) setSelectedLocation(loc);
+    } else if (type === 'event') {
+      setEventModalVisible(true);
+    } else if (type === 'celebration') {
+      setCelebrationModalVisible(true);
+    }
+  };
+
+  const handleEventSave = (event: { title: string; date: string; description: string }) => {
+    setSelectedEvent(event);
+  };
+
+  const handleCelebrationSelect = (celebration: { key: string; label: string }) => {
+    setSelectedCelebration(celebration);
   };
 
   const renderPrivacyOption = (option: string) => (
@@ -65,7 +247,7 @@ export default function PostScreen({ userAvatar }: PostScreenProps) {
     </TouchableOpacity>
   );
 
-  const renderMediaOption = (icon: string, label: string, type: 'photo' | 'video' | 'document') => (
+  const renderMediaOption = (icon: string, label: string, type: 'photo' | 'video' | 'document' | 'event' | 'location' | 'celebration') => (
     <TouchableOpacity
       key={label}
       style={styles.mediaOption}
@@ -75,6 +257,114 @@ export default function PostScreen({ userAvatar }: PostScreenProps) {
       <Text style={[styles.mediaOptionText, { color: theme.textColor }]}>{label}</Text>
     </TouchableOpacity>
   );
+
+  const renderSelectedMedia = () => {
+    if (
+      selectedMedia.length === 0 &&
+      !selectedVideo &&
+      !selectedVideoThumbnail &&
+      !selectedDocument &&
+      !selectedLocation &&
+      !selectedEvent &&
+      !selectedCelebration
+    ) return null;
+
+    return (
+      <View style={styles.selectedMediaContainer}>
+        {/* Images */}
+        {selectedMedia.length > 0 && (
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.mediaScrollView}>
+            {selectedMedia.map((mediaUri, index) => (
+              <View key={index} style={styles.mediaItem}>
+                <Image source={{ uri: mediaUri }} style={styles.mediaPreview} />
+                <TouchableOpacity
+                  style={styles.removeMediaButton}
+                  onPress={() => removeImage(index)}
+                >
+                  <MaterialCommunityIcons name="close-circle" size={24} color="#fff" />
+                </TouchableOpacity>
+              </View>
+            ))}
+          </ScrollView>
+        )}
+        {/* Video */}
+        {selectedVideo && (
+          <View style={styles.selectedVideoContainer}>
+            <Text style={[styles.selectedMediaTitle, { color: theme.textColor }]}>Selected Video:</Text>
+            {selectedVideoThumbnail ? (
+              <Image source={{ uri: selectedVideoThumbnail }} style={{ width: '100%', height: 200, borderRadius: 12, marginBottom: 8 }} resizeMode="cover" />
+            ) : (
+              <View style={{ width: '100%', height: 200, borderRadius: 12, backgroundColor: '#000', marginBottom: 8, justifyContent: 'center', alignItems: 'center' }}>
+                <MaterialCommunityIcons name="play" size={48} color="#fff" />
+              </View>
+            )}
+            <TouchableOpacity onPress={() => { setSelectedVideo(null); setSelectedVideoThumbnail(null); }}>
+              <Text style={[styles.clearAllText, { color: theme.primaryColor }]}>Remove Video</Text>
+            </TouchableOpacity>
+          </View>
+        )}
+        {/* Document */}
+        {selectedDocument && (
+          <View style={styles.selectedDocumentContainer}>
+            <Text style={[styles.selectedMediaTitle, { color: theme.textColor }]}>Selected Document:</Text>
+            <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 8 }}>
+              <MaterialCommunityIcons name="file-document" size={32} color={theme.primaryColor} />
+              <Text style={{ color: theme.textColor, marginLeft: 8 }}>{selectedDocument.name}</Text>
+            </View>
+            <TouchableOpacity onPress={() => setSelectedDocument(null)}>
+              <Text style={[styles.clearAllText, { color: theme.primaryColor }]}>Remove Document</Text>
+            </TouchableOpacity>
+          </View>
+        )}
+        {/* Location */}
+        {selectedLocation && (
+          <View style={styles.selectedLocationContainer}>
+            <Text style={[styles.selectedMediaTitle, { color: theme.textColor }]}>Selected Location:</Text>
+            <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 8 }}>
+              <MaterialCommunityIcons name="map-marker" size={32} color={theme.primaryColor} />
+              <Text style={{ color: theme.textColor, marginLeft: 8 }}>Lat: {selectedLocation.coords.latitude}, Lon: {selectedLocation.coords.longitude}</Text>
+            </View>
+            <TouchableOpacity onPress={() => setSelectedLocation(null)}>
+              <Text style={[styles.clearAllText, { color: theme.primaryColor }]}>Remove Location</Text>
+            </TouchableOpacity>
+          </View>
+        )}
+        {/* Event */}
+        {selectedEvent && (
+          <View style={styles.selectedEventContainer}>
+            <Text style={[styles.selectedMediaTitle, { color: theme.textColor }]}>Event:</Text>
+            <View style={{ backgroundColor: theme.surfaceColor, borderRadius: 8, padding: 12, marginBottom: 8 }}>
+              <Text style={{ color: theme.textColor, fontWeight: 'bold', fontSize: 16 }}>{selectedEvent.title}</Text>
+              <Text style={{ color: theme.textSecondaryColor }}>{selectedEvent.date}</Text>
+              <Text style={{ color: theme.textColor }}>{selectedEvent.description}</Text>
+            </View>
+            <TouchableOpacity onPress={() => setSelectedEvent(null)}>
+              <Text style={[styles.clearAllText, { color: theme.primaryColor }]}>Remove Event</Text>
+            </TouchableOpacity>
+          </View>
+        )}
+        {/* Celebration */}
+        {selectedCelebration && (
+          <View style={styles.selectedCelebrationContainer}>
+            <Text style={[styles.selectedMediaTitle, { color: theme.textColor }]}>Celebration:</Text>
+            <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 8 }}>
+              <Text style={{ fontSize: 32 }}>{selectedCelebration.key}</Text>
+              <Text style={{ color: theme.textColor, fontSize: 18, marginLeft: 8 }}>{selectedCelebration.label}</Text>
+            </View>
+            <TouchableOpacity onPress={() => setSelectedCelebration(null)}>
+              <Text style={[styles.clearAllText, { color: theme.primaryColor }]}>Remove Celebration</Text>
+            </TouchableOpacity>
+          </View>
+        )}
+        {/* Clear all button for images */}
+        {selectedMedia.length > 0 && (
+          <TouchableOpacity onPress={clearAllMedia}>
+            <Text style={[styles.clearAllText, { color: theme.primaryColor }]}>Clear all images</Text>
+          </TouchableOpacity>
+        )}
+      </View>
+    );
+  };
 
   // Helper to build a mock profile object from user data
   const buildProfile = (user: any) => ({
@@ -118,12 +408,12 @@ export default function PostScreen({ userAvatar }: PostScreenProps) {
           <TouchableOpacity 
             style={[
               styles.postButton,
-              { backgroundColor: postText.trim() ? theme.primaryColor : '#ccc' }
+              { backgroundColor: postText.trim() || selectedMedia.length > 0 ? theme.primaryColor : '#ccc' }
             ]}
             onPress={handlePost}
-            disabled={!postText.trim()}
+            disabled={!postText.trim() && selectedMedia.length === 0}
           >
-            <Text style={[styles.postButtonText, { color: postText.trim() ? '#fff' : theme.textSecondaryColor }]}>
+            <Text style={[styles.postButtonText, { color: postText.trim() || selectedMedia.length > 0 ? '#fff' : theme.textSecondaryColor }]}>
               Post
             </Text>
           </TouchableOpacity>
@@ -133,14 +423,14 @@ export default function PostScreen({ userAvatar }: PostScreenProps) {
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
         {/* User Profile Section */}
         <View style={styles.userSection}>
-          <TouchableOpacity onPress={() => handleProfilePress({ name: 'John Doe', avatar: userAvatar ? { uri: userAvatar } : require('@/assets/images/Avator-Image.jpg') })}>
+          <TouchableOpacity onPress={() => setShowMyProfileModal(true)}>
             <Image
-              source={userAvatar ? { uri: userAvatar } : require('@/assets/images/Avator-Image.jpg')}
+              source={userProfile?.avatarUri ? { uri: userProfile.avatarUri } : (userAvatar ? { uri: userAvatar } : require('@/assets/images/Avator-Image.jpg'))}
               style={styles.userAvatar}
             />
           </TouchableOpacity>
           <View style={styles.userInfo}>
-            <Text style={[styles.userName, { color: theme.textColor }]}>John Doe</Text>
+            <Text style={[styles.userName, { color: theme.textColor }]}>{userProfile ? (userProfile.firstName + (userProfile.lastName ? ' ' + userProfile.lastName : '')) : 'Your Name'}</Text>
             <TouchableOpacity style={styles.privacySelector}>
               <MaterialCommunityIcons name="earth" size={16} color={theme.textSecondaryColor} />
               <Text style={[styles.privacyText, { color: theme.textColor }]}>{selectedPrivacy}</Text>
@@ -161,6 +451,7 @@ export default function PostScreen({ userAvatar }: PostScreenProps) {
             textAlignVertical="top"
             autoFocus
           />
+          {renderSelectedMedia()}
         </View>
 
         {/* Privacy Options */}
@@ -180,9 +471,9 @@ export default function PostScreen({ userAvatar }: PostScreenProps) {
             {renderMediaOption('image', 'Photo', 'photo')}
             {renderMediaOption('video', 'Video', 'video')}
             {renderMediaOption('file-document', 'Document', 'document')}
-            {renderMediaOption('calendar', 'Event', 'document')}
-            {renderMediaOption('map-marker', 'Location', 'document')}
-            {renderMediaOption('emoticon', 'Celebration', 'document')}
+            {renderMediaOption('calendar', 'Event', 'event')}
+            {renderMediaOption('map-marker', 'Location', 'location')}
+            {renderMediaOption('emoticon', 'Celebration', 'celebration')}
           </View>
         </View>
 
@@ -246,6 +537,22 @@ export default function PostScreen({ userAvatar }: PostScreenProps) {
           profile={selectedProfile}
         />
       )}
+      {/* Modals for Event and Celebration */}
+      <EventModal visible={eventModalVisible} onClose={() => setEventModalVisible(false)} onSave={handleEventSave} />
+      <CelebrationModal visible={celebrationModalVisible} onClose={() => setCelebrationModalVisible(false)} onSelect={handleCelebrationSelect} />
+      {/* MyProfileScreen Modal */}
+      {showMyProfileModal && (
+        <Modal visible={showMyProfileModal} animationType="slide" onRequestClose={() => setShowMyProfileModal(false)}>
+          <MyProfileScreen
+            profile={userProfile}
+            onBack={() => setShowMyProfileModal(false)}
+          />
+          <TouchableOpacity style={{ position: 'absolute', top: 40, right: 24, zIndex: 100 }} onPress={() => setShowMyProfileModal(false)}>
+            <MaterialCommunityIcons name="close" size={32} color="#222" />
+          </TouchableOpacity>
+        </Modal>
+      )}
+      <Snackbar visible={snackbar.visible} message={snackbar.message} type={snackbar.type} onHide={() => setSnackbar({ ...snackbar, visible: false })} />
     </KeyboardAvoidingView>
   );
 }
@@ -375,6 +682,48 @@ const styles = StyleSheet.create({
     marginLeft: 6,
     fontWeight: '500',
   },
+  selectedMediaContainer: {
+    paddingHorizontal: 16,
+    paddingBottom: 16,
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(0,0,0,0.1)',
+    marginTop: 8,
+  },
+  selectedMediaHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  selectedMediaTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  clearAllText: {
+    fontSize: 14,
+    fontWeight: '500',
+  },
+  mediaScrollView: {
+    // Add any specific styles for the ScrollView if needed
+  },
+  mediaItem: {
+    position: 'relative',
+    marginRight: 8,
+  },
+  mediaPreview: {
+    width: 80,
+    height: 80,
+    borderRadius: 8,
+    marginBottom: 4,
+  },
+  removeMediaButton: {
+    position: 'absolute',
+    top: -5,
+    right: -5,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    borderRadius: 12,
+    padding: 4,
+  },
   recentPostsSection: {
     paddingHorizontal: 16,
     paddingTop: 16,
@@ -453,5 +802,40 @@ const styles = StyleSheet.create({
   actionText: {
     fontSize: 14,
     marginLeft: 6,
+  },
+  selectedVideoContainer: {
+    paddingHorizontal: 16,
+    paddingBottom: 16,
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(0,0,0,0.1)',
+    marginTop: 8,
+  },
+  selectedDocumentContainer: {
+    paddingHorizontal: 16,
+    paddingBottom: 16,
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(0,0,0,0.1)',
+    marginTop: 8,
+  },
+  selectedLocationContainer: {
+    paddingHorizontal: 16,
+    paddingBottom: 16,
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(0,0,0,0.1)',
+    marginTop: 8,
+  },
+  selectedEventContainer: {
+    paddingHorizontal: 16,
+    paddingBottom: 16,
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(0,0,0,0.1)',
+    marginTop: 8,
+  },
+  selectedCelebrationContainer: {
+    paddingHorizontal: 16,
+    paddingBottom: 16,
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(0,0,0,0.1)',
+    marginTop: 8,
   },
 }); 

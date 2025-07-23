@@ -139,20 +139,67 @@ public class UserProfileController {
     public ResponseEntity<String> uploadProfilePicture(
             @PathVariable Long userId,
             @RequestParam("file") MultipartFile file) {
-        // TODO: Implement file upload logic
-        String imageUrl = "https://example.com/profile-pictures/" + file.getOriginalFilename();
-        return ResponseEntity.ok(imageUrl);
+        Optional<UserProfile> profileOpt = userProfileService.getUserProfileById(userId);
+        if (profileOpt.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body("User profile not found. Cannot upload profile picture.");
+        }
+        if (file.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body("No file uploaded.");
+        }
+        try {
+            // Example: Save file to local directory (could be replaced with cloud storage)
+            String uploadDir = "uploads/profile-pictures/" + userId;
+            java.nio.file.Path uploadPath = java.nio.file.Paths.get(uploadDir);
+            if (!java.nio.file.Files.exists(uploadPath)) {
+                java.nio.file.Files.createDirectories(uploadPath);
+            }
+            String filename = java.util.UUID.randomUUID() + "_" + file.getOriginalFilename();
+            java.nio.file.Path filePath = uploadPath.resolve(filename);
+            file.transferTo(filePath.toFile());
+
+            // Optionally, update the user's profile with the image URL/path
+            UserProfile profile = profileOpt.get();
+            profile.setProfilePictureUrl("/" + uploadDir + "/" + filename);
+            userProfileService.updateUserProfile(userId, profile);
+
+            String imageUrl = "/" + uploadDir + "/" + filename;
+            return ResponseEntity.ok(imageUrl);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Failed to upload profile picture: " + e.getMessage());
+        }
     }
 
     @DeleteMapping("/{userId}/profile-picture")
     public ResponseEntity<String> deleteProfilePicture(@PathVariable Long userId) {
-        Optional<UserProfile> profile = userProfileService.getUserProfileById(userId);
-        if (profile.isEmpty()) {
+        Optional<UserProfile> profileOpt = userProfileService.getUserProfileById(userId);
+        if (profileOpt.isEmpty()) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
                     .body("User profile not found. Cannot delete profile picture.");
         }
-        // TODO: Implement file deletion logic
-        return ResponseEntity.ok("Profile picture deleted successfully.");
+        UserProfile profile = profileOpt.get();
+        String pictureUrl = profile.getProfilePictureUrl();
+        if (pictureUrl == null || pictureUrl.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body("No profile picture to delete.");
+        }
+        try {
+            // Remove leading slash if present
+            String filePathStr = pictureUrl.startsWith("/") ? pictureUrl.substring(1) : pictureUrl;
+            java.nio.file.Path filePath = java.nio.file.Paths.get(filePathStr);
+            java.nio.file.Files.deleteIfExists(filePath);
+
+            // Remove the profile picture URL from the user profile
+            profile.setProfilePictureUrl(null);
+            userProfileService.updateUserProfile(userId, profile);
+
+            return ResponseEntity.ok("Profile picture deleted successfully.");
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Failed to delete profile picture: " + e.getMessage());
+        }
     }
 
     @GetMapping

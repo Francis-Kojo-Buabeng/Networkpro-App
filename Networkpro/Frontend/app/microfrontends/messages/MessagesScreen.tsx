@@ -8,7 +8,9 @@ import {
   Text,
   TextInput,
   TouchableOpacity,
-  View
+  View,
+  RefreshControl,
+  Modal
 } from 'react-native';
 import MessageModal from '../../../components/MessageModal';
 import NewMessageButton from '../../../components/NewMessageButton';
@@ -19,6 +21,8 @@ import { useProfileNavigation } from '../../../contexts/ProfileNavigationContext
 import {
   MessageSearchHeader
 } from './components';
+import Sidebar from '../home/Sidebar';
+import MyProfileScreen from '../profile/MyProfileScreen';
 
 const { width } = Dimensions.get('window');
 
@@ -66,7 +70,7 @@ export default function MessagesScreen({ userAvatar }: MessagesScreenProps) {
       name: 'John Doe',
       title: 'Software Engineer',
       company: 'Tech Solutions Inc.',
-      avatar: require('@/assets/images/Avator-Image.jpg'),
+      avatar: require('@/assets/images/profile-pictures/image-01.jpg'),
       lastMessage: 'Thanks for the referral! I\'ll definitely check it out.',
       timestamp: '2m ago',
       unreadCount: 2,
@@ -104,7 +108,7 @@ export default function MessagesScreen({ userAvatar }: MessagesScreenProps) {
       name: 'Jane Smith',
       title: 'Product Manager',
       company: 'Digital Marketing Pro',
-      avatar: require('@/assets/images/Avator-Image.jpg'),
+      avatar: require('@/assets/images/profile-pictures/image-02.webp'),
       lastMessage: 'The project timeline looks great. Let\'s discuss this tomorrow.',
       timestamp: '1h ago',
       unreadCount: 0,
@@ -142,7 +146,7 @@ export default function MessagesScreen({ userAvatar }: MessagesScreenProps) {
       name: 'Mike Johnson',
       title: 'UX Designer',
       company: 'Creative Studio',
-      avatar: require('@/assets/images/Avator-Image.jpg'),
+      avatar: require('@/assets/images/profile-pictures/image-03.jpg'),
       lastMessage: 'Can you share the design files? I need them for the presentation.',
       timestamp: '3h ago',
       unreadCount: 1,
@@ -180,7 +184,7 @@ export default function MessagesScreen({ userAvatar }: MessagesScreenProps) {
       name: 'Sarah Wilson',
       title: 'Marketing Director',
       company: 'Global Marketing',
-      avatar: require('@/assets/images/Avator-Image.jpg'),
+      avatar: require('@/assets/images/profile-pictures/image-04.jpeg'),
       lastMessage: 'The campaign results are in. We exceeded our targets!',
       timestamp: '1d ago',
       unreadCount: 0,
@@ -218,7 +222,7 @@ export default function MessagesScreen({ userAvatar }: MessagesScreenProps) {
       name: 'Alex Brown',
       title: 'Data Scientist',
       company: 'Analytics Corp',
-      avatar: require('@/assets/images/Avator-Image.jpg'),
+      avatar: require('@/assets/images/profile-pictures/image-05.avif'),
       lastMessage: 'I\'ve sent you the updated analytics report.',
       timestamp: '2d ago',
       unreadCount: 0,
@@ -252,6 +256,15 @@ export default function MessagesScreen({ userAvatar }: MessagesScreenProps) {
       ],
     },
   ]);
+
+  const [showDashboard, setShowDashboard] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
+  const [showMyProfileModal, setShowMyProfileModal] = useState(false);
+
+  const onRefresh = () => {
+    setRefreshing(true);
+    setTimeout(() => setRefreshing(false), 1200);
+  };
 
   // Helper to build a mock profile object from user data
   const buildProfile = (user: any) => ({
@@ -424,7 +437,7 @@ export default function MessagesScreen({ userAvatar }: MessagesScreenProps) {
         searchQuery={searchQuery}
         onSearchChange={setSearchQuery}
         onFilterToggle={() => setShowFilters(!showFilters)}
-        onProfilePress={() => handleProfilePress({ name: 'Current User', avatar: userAvatar ? { uri: userAvatar } : require('@/assets/images/default-avator.jpg') })}
+        onProfilePress={() => setShowDashboard(true)}
         onNotificationPress={() => setNotificationModalVisible(true)}
         userAvatar={userAvatar}
         showFilters={showFilters}
@@ -446,6 +459,7 @@ export default function MessagesScreen({ userAvatar }: MessagesScreenProps) {
         keyExtractor={(item) => item.id}
         style={styles.conversationsList}
         showsVerticalScrollIndicator={false}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
         ListEmptyComponent={
           <View style={styles.emptyState}>
             <MaterialCommunityIcons 
@@ -496,6 +510,13 @@ export default function MessagesScreen({ userAvatar }: MessagesScreenProps) {
         visible={notificationModalVisible}
         onClose={() => setNotificationModalVisible(false)}
       />
+      {showDashboard && (
+        <Sidebar
+          userAvatar={userAvatar}
+          onClose={() => setShowDashboard(false)}
+          onMePress={() => {}}
+        />
+      )}
     </View>
   );
 }

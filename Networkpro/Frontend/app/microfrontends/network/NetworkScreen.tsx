@@ -7,6 +7,10 @@ import {
   StyleSheet,
   Text,
   View,
+  TouchableOpacity,
+  Image,
+  RefreshControl,
+  Modal,
 } from 'react-native';
 import ConnectionCard from '../../../components/ConnectionCard';
 import MessageModal from '../../../components/MessageModal';
@@ -18,6 +22,8 @@ import { useProfileNavigation } from '../../../contexts/ProfileNavigationContext
 import {
   NetworkSearchHeader
 } from './components';
+import Sidebar from '../home/Sidebar';
+import MyProfileScreen from '../profile/MyProfileScreen';
 
 const { width } = Dimensions.get('window');
 
@@ -61,6 +67,15 @@ interface NetworkStats {
   profileViews: number;
 }
 
+interface GrowthInsight {
+  id: string;
+  title: string;
+  description: string;
+  icon: string;
+  value: string;
+  trend: 'up' | 'down' | 'neutral';
+}
+
 interface NetworkScreenProps {
   userAvatar?: string | null;
 }
@@ -68,6 +83,24 @@ interface NetworkScreenProps {
 export default function NetworkScreen({ userAvatar }: NetworkScreenProps) {
   const theme = useCurrentTheme();
   const { openProfile } = useProfileNavigation();
+  const userProfile = {
+    firstName: 'Your',
+    lastName: 'Name',
+    avatarUri: userAvatar,
+    title: 'Your Title',
+    company: 'Your Company',
+    location: 'Your Location',
+    about: 'About you',
+    headerImage: null,
+    experience: [],
+    education: [],
+    skills: [],
+    mutualConnections: 0,
+    isConnected: false,
+    isOnline: false,
+    isPending: false,
+    isSuggested: false,
+  };
   const [activeTab, setActiveTab] = useState<'connections' | 'pending' | 'suggestions'>('connections');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedProfile, setSelectedProfile] = useState<Connection | null>(null);
@@ -75,6 +108,24 @@ export default function NetworkScreen({ userAvatar }: NetworkScreenProps) {
   const [messageModalVisible, setMessageModalVisible] = useState(false);
   const [selectedConversation, setSelectedConversation] = useState<any>(null);
   const [notificationModalVisible, setNotificationModalVisible] = useState(false);
+  const [showDashboard, setShowDashboard] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
+  const [showMyProfileModal, setShowMyProfileModal] = useState(false);
+
+  const onRefresh = () => {
+    setRefreshing(true);
+    setTimeout(() => setRefreshing(false), 1200);
+  };
+
+  const profilePictures = [
+    require('@/assets/images/profile-pictures/image-01.jpg'),
+    require('@/assets/images/profile-pictures/image-02.webp'),
+    require('@/assets/images/profile-pictures/image-03.jpg'),
+    require('@/assets/images/profile-pictures/image-04.jpeg'),
+    require('@/assets/images/profile-pictures/image-05.avif'),
+    require('@/assets/images/profile-pictures/image-06.webp'),
+    require('@/assets/images/profile-pictures/image-07.jpg'),
+  ];
 
   const [connections, setConnections] = useState<Connection[]>([
     {
@@ -82,7 +133,7 @@ export default function NetworkScreen({ userAvatar }: NetworkScreenProps) {
       name: 'John Doe',
       title: 'Software Engineer',
       company: 'Tech Solutions Inc.',
-      avatar: require('@/assets/images/Avator-Image.jpg'),
+      avatar: profilePictures[0],
       mutualConnections: 15,
       isOnline: true,
       isPending: false,
@@ -121,7 +172,7 @@ export default function NetworkScreen({ userAvatar }: NetworkScreenProps) {
       name: 'Jane Smith',
       title: 'Product Manager',
       company: 'Digital Marketing Pro',
-      avatar: require('@/assets/images/Avator-Image.jpg'),
+      avatar: profilePictures[1],
       mutualConnections: 8,
       isOnline: false,
       isPending: false,
@@ -153,7 +204,7 @@ export default function NetworkScreen({ userAvatar }: NetworkScreenProps) {
       name: 'Mike Johnson',
       title: 'UX Designer',
       company: 'Creative Studio',
-      avatar: require('@/assets/images/Avator-Image.jpg'),
+      avatar: profilePictures[2],
       mutualConnections: 12,
       isOnline: true,
       isPending: false,
@@ -188,7 +239,7 @@ export default function NetworkScreen({ userAvatar }: NetworkScreenProps) {
       name: 'Sarah Wilson',
       title: 'Marketing Director',
       company: 'Global Marketing',
-      avatar: require('@/assets/images/Avator-Image.jpg'),
+      avatar: profilePictures[3],
       mutualConnections: 6,
       isOnline: false,
       isPending: true,
@@ -220,7 +271,7 @@ export default function NetworkScreen({ userAvatar }: NetworkScreenProps) {
       name: 'Alex Brown',
       title: 'Data Scientist',
       company: 'Analytics Corp',
-      avatar: require('@/assets/images/Avator-Image.jpg'),
+      avatar: profilePictures[4],
       mutualConnections: 9,
       isOnline: true,
       isPending: true,
@@ -255,7 +306,7 @@ export default function NetworkScreen({ userAvatar }: NetworkScreenProps) {
       name: 'Emma Davis',
       title: 'Business Analyst',
       company: 'Strategy Partners',
-      avatar: require('@/assets/images/Avator-Image.jpg'),
+      avatar: profilePictures[5],
       mutualConnections: 7,
       isOnline: false,
       isPending: false,
@@ -287,7 +338,7 @@ export default function NetworkScreen({ userAvatar }: NetworkScreenProps) {
       name: 'Tom Wilson',
       title: 'Sales Manager',
       company: 'Revenue Solutions',
-      avatar: require('@/assets/images/Avator-Image.jpg'),
+      avatar: profilePictures[6],
       mutualConnections: 11,
       isOnline: true,
       isPending: false,
@@ -319,7 +370,7 @@ export default function NetworkScreen({ userAvatar }: NetworkScreenProps) {
       name: 'Lisa Chen',
       title: 'Operations Director',
       company: 'Efficiency Corp',
-      avatar: require('@/assets/images/Avator-Image.jpg'),
+      avatar: profilePictures[0], // repeat if needed
       mutualConnections: 4,
       isOnline: false,
       isPending: false,
@@ -354,6 +405,34 @@ export default function NetworkScreen({ userAvatar }: NetworkScreenProps) {
     newSuggestions: 23,
     profileViews: 45,
   });
+
+  // LinkedIn-style growth insights
+  const growthInsights: GrowthInsight[] = [
+    {
+      id: '1',
+      title: 'Profile views',
+      description: 'Your profile was viewed 45 times this week',
+      icon: 'eye',
+      value: '45',
+      trend: 'up',
+    },
+    {
+      id: '2',
+      title: 'Search appearances',
+      description: 'You appeared in 12 searches this week',
+      icon: 'magnify',
+      value: '12',
+      trend: 'up',
+    },
+    {
+      id: '3',
+      title: 'Connection growth',
+      description: 'You grew your network by 8 connections this month',
+      icon: 'account-plus',
+      value: '8',
+      trend: 'up',
+    },
+  ];
 
   const getCurrentData = () => {
     const allData = [...connections, ...pendingRequests, ...suggestions];
@@ -433,19 +512,16 @@ export default function NetworkScreen({ userAvatar }: NetworkScreenProps) {
   };
 
   const handleConnect = (connectionId: string) => {
-    const updatedData = getCurrentData().map(connection =>
+    // Set isPending to true for the selected connection
+    const updatePending = (arr: Connection[]) => arr.map(connection =>
       connection.id === connectionId
-        ? { ...connection, isConnected: true, isPending: false, isSuggested: false }
+        ? { ...connection, isPending: true }
         : connection
     );
 
-    if (activeTab === 'connections') {
-      setConnections(updatedData);
-    } else if (activeTab === 'pending') {
-      setPendingRequests(updatedData);
-    } else if (activeTab === 'suggestions') {
-      setSuggestions(updatedData);
-    }
+    setConnections(prev => updatePending(prev));
+    setPendingRequests(prev => updatePending(prev));
+    setSuggestions(prev => updatePending(prev));
   };
 
   const handleProfileCardPress = (connection: Connection) => {
@@ -471,6 +547,28 @@ export default function NetworkScreen({ userAvatar }: NetworkScreenProps) {
     openProfile(profileData);
   };
 
+  const renderGrowthInsight = ({ item }: { item: GrowthInsight }) => (
+    <View style={[styles.growthInsightCard, { backgroundColor: theme.cardColor }]}>
+      <View style={styles.growthInsightHeader}>
+        <MaterialCommunityIcons 
+          name={item.icon as any} 
+          size={20} 
+          color={theme.primaryColor} 
+        />
+        <View style={styles.growthInsightTrend}>
+          <MaterialCommunityIcons 
+            name={item.trend === 'up' ? 'trending-up' : item.trend === 'down' ? 'trending-down' : 'minus'} 
+            size={16} 
+            color={item.trend === 'up' ? '#4CAF50' : item.trend === 'down' ? '#F44336' : theme.textSecondaryColor} 
+          />
+        </View>
+      </View>
+      <Text style={[styles.growthInsightValue, { color: theme.textColor }]}>{item.value}</Text>
+      <Text style={[styles.growthInsightTitle, { color: theme.textColor }]}>{item.title}</Text>
+      <Text style={[styles.growthInsightDescription, { color: theme.textSecondaryColor }]}>{item.description}</Text>
+    </View>
+  );
+
   const renderConnection = ({ item }: { item: Connection }) => (
     <ConnectionCard
       item={item}
@@ -489,12 +587,47 @@ export default function NetworkScreen({ userAvatar }: NetworkScreenProps) {
       <NetworkSearchHeader
         searchQuery={searchQuery}
         onSearchChange={setSearchQuery}
-        onProfilePress={() => setProfileModalVisible(true)}
+        onProfilePress={() => setShowMyProfileModal(true)}
         onNotificationPress={() => setNotificationModalVisible(true)}
         userAvatar={userAvatar}
       />
 
+      {showDashboard && (
+        <Sidebar
+          userAvatar={userAvatar}
+          onClose={() => setShowDashboard(false)}
+          onMePress={() => {}}
+        />
+      )}
+
+      {showMyProfileModal && (
+        <Modal visible={showMyProfileModal} animationType="slide" onRequestClose={() => setShowMyProfileModal(false)}>
+          <MyProfileScreen profile={userProfile} onBack={() => setShowMyProfileModal(false)} />
+          <TouchableOpacity style={{ position: 'absolute', top: 40, right: 24, zIndex: 100 }} onPress={() => setShowMyProfileModal(false)}>
+            <MaterialCommunityIcons name="close" size={32} color="#222" />
+          </TouchableOpacity>
+        </Modal>
+      )}
+
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
+        {/* LinkedIn-style Network Stats */}
+        <View style={styles.statsSection}>
+          <View style={styles.statsHeader}>
+            <Text style={[styles.sectionTitle, { color: theme.textColor }]}>Network insights</Text>
+            <TouchableOpacity>
+              <Text style={[styles.viewAllText, { color: theme.primaryColor }]}>View all</Text>
+            </TouchableOpacity>
+          </View>
+          <FlatList
+            data={growthInsights}
+            renderItem={renderGrowthInsight}
+            keyExtractor={(item) => item.id}
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.growthInsightsList}
+          />
+        </View>
+
         {/* Tabs */}
         <View style={styles.tabsContainer}>
           <NetworkTabButton label="Connections" count={connections.length} active={activeTab === 'connections'} onPress={() => setActiveTab('connections')} theme={theme} />
@@ -511,6 +644,7 @@ export default function NetworkScreen({ userAvatar }: NetworkScreenProps) {
             scrollEnabled={false}
             numColumns={2}
             columnWrapperStyle={styles.row}
+            refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
             ListEmptyComponent={
               <View style={styles.emptyState}>
                 <MaterialCommunityIcons 
@@ -812,5 +946,45 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingHorizontal: 8,
     gap: 4,
+  },
+  growthInsightsList: {
+    paddingHorizontal: 20,
+    paddingBottom: 16,
+  },
+  growthInsightCard: {
+    width: (width - 52) / 2, // Adjust width for horizontal scroll
+    marginRight: 12,
+    padding: 16,
+    borderRadius: 12,
+    alignItems: 'center',
+  },
+  growthInsightHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    width: '100%',
+    marginBottom: 8,
+  },
+  growthInsightTrend: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  growthInsightValue: {
+    fontSize: 24,
+    fontWeight: '700',
+    marginBottom: 4,
+  },
+  growthInsightTitle: {
+    fontSize: 14,
+    fontWeight: '600',
+    marginBottom: 4,
+  },
+  growthInsightDescription: {
+    fontSize: 12,
+    textAlign: 'center',
+  },
+  viewAllText: {
+    fontSize: 14,
+    fontWeight: '600',
   },
 }); 

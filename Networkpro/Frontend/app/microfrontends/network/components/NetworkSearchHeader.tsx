@@ -30,11 +30,13 @@ export default function NetworkSearchHeader({
     <View style={[styles.header, { backgroundColor: theme.surfaceColor }]}>
       <View style={styles.headerTop}>
         <View style={styles.headerLeft}>
-          <Image 
-            source={userAvatar ? { uri: userAvatar } : require('@/assets/images/Avator-Image.jpg')} 
-            style={[styles.profilePicture, { borderColor: theme.primaryColor }]} 
-          />
-          <View style={[styles.searchContainer, { backgroundColor: theme.inputBackgroundColor, width: 300, marginRight: 0 }]}> 
+          <TouchableOpacity onPress={onProfilePress}>
+            <Image 
+              source={userAvatar ? { uri: userAvatar } : require('@/assets/images/Avator-Image.jpg')} 
+              style={[styles.profilePicture, { borderColor: theme.primaryColor }]} 
+            />
+          </TouchableOpacity>
+          <View style={[styles.searchContainer, { backgroundColor: theme.inputBackgroundColor, borderColor: theme.borderColor }]}> 
             <MaterialCommunityIcons name="magnify" size={20} color={theme.textSecondaryColor} style={styles.searchIcon} />
             <TextInput
               style={[styles.searchInput, { color: theme.textColor, fontSize: 15 }]}
@@ -44,7 +46,7 @@ export default function NetworkSearchHeader({
               onChangeText={onSearchChange}
             />
           </View>
-          <TouchableOpacity style={{ marginLeft: 8 }} onPress={onNotificationPress}>
+          <TouchableOpacity style={styles.notificationButton} onPress={onNotificationPress}>
             <MaterialCommunityIcons name="bell-outline" size={24} color={theme.textColor} />
           </TouchableOpacity>
         </View>
@@ -57,6 +59,7 @@ const styles = StyleSheet.create({
   header: {
     paddingTop: 40,
     paddingHorizontal: 20,
+    paddingBottom: 12,
   },
   headerTop: {
     flexDirection: 'row',
@@ -81,11 +84,12 @@ const styles = StyleSheet.create({
   searchContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    borderRadius: 12,
-    paddingHorizontal: 12,
+    borderRadius: 25,
+    paddingHorizontal: 16,
     height: 44,
     marginBottom: 0,
     flex: 1,
+    borderWidth: 1,
   },
   searchIcon: {
     marginRight: 10,
@@ -94,5 +98,8 @@ const styles = StyleSheet.create({
     flex: 1,
     marginLeft: 8,
     fontSize: 16,
+  },
+  notificationButton: {
+    padding: 8,
   },
 }); 

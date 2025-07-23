@@ -6,3 +6,6 @@ export { default as JobSearchHeader } from './JobSearchHeader';
 
 export type { CompanyProfile } from './CompanyModal';
 export type { Job } from './JobCard';
+
+// Dummy default export to silence route warning
+export default function _Noop() { return null; }

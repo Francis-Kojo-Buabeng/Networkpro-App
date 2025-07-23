@@ -61,28 +61,36 @@ export default function ConnectionCard({ item, theme, onPress, onAccept, onIgnor
       </View>
 
       {/* Connect Button at Bottom */}
-      <TouchableOpacity 
-        style={[styles.connectButton, { borderColor: theme.primaryColor }]}
-        onPress={(e) => { e.stopPropagation(); onConnect && onConnect(); }}
-      >
-        <Text style={[styles.connectButtonText, { color: theme.primaryColor }]}>Connect</Text>
-      </TouchableOpacity>
+      {!item.isPending ? (
+        <TouchableOpacity
+          style={[styles.connectButton, { borderColor: theme.primaryColor }]}
+          onPress={(e) => { e.stopPropagation(); onConnect && onConnect(); }}
+        >
+          <Text style={[styles.connectButtonText, { color: theme.primaryColor }]}>Connect</Text>
+        </TouchableOpacity>
+      ) : (
+        <View style={[styles.connectButton, { borderColor: theme.primaryColor, backgroundColor: theme.surfaceColor, opacity: 0.6 }]}> 
+          <Text style={[styles.connectButtonText, { color: theme.primaryColor }]}>Pending</Text>
+        </View>
+      )}
     </TouchableOpacity>
   );
 }
 
 const styles = StyleSheet.create({
   connectionCard: {
-    padding: 12,
-    borderRadius: 12,
+    padding: 15, // increased
+    borderRadius: 10, // slightly larger
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+    shadowRadius: 6, // larger
+    elevation: 4,
     backgroundColor: '#fff',
     alignItems: 'center',
     position: 'relative',
+    width: '100%', // nearly full width for single column
+    minHeight: 180, // taller card
   },
   dismissButton: {
     position: 'absolute',
@@ -95,9 +103,9 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   avatar: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
+    width: 72, // larger
+    height: 72, // larger
+    borderRadius: 36,
   },
   onlineIndicator: {
     position: 'absolute',
@@ -134,16 +142,16 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   connectionName: {
-    fontSize: 13,
+    fontSize: 18, // larger
     fontWeight: 'bold',
     textAlign: 'center',
   },
   connectionTitle: {
-    fontSize: 11,
+    fontSize: 14, // larger
     fontWeight: '400',
-    marginBottom: 6,
+    marginBottom: 8,
     textAlign: 'center',
-    lineHeight: 14,
+    lineHeight: 18,
   },
   mutualConnectionsRow: {
     flexDirection: 'row',
@@ -157,18 +165,18 @@ const styles = StyleSheet.create({
     borderRadius: 8,
   },
   mutualConnections: {
-    fontSize: 10,
+    fontSize: 13, // larger
   },
   connectButton: {
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 16,
+    paddingHorizontal: 18, // larger
+    paddingVertical: 10, // larger
+    borderRadius: 20,
     borderWidth: 1,
     alignItems: 'center',
     width: '100%',
   },
   connectButtonText: {
-    fontSize: 11,
+    fontSize: 15, // larger
     fontWeight: '600',
     textAlign: 'center',
   },

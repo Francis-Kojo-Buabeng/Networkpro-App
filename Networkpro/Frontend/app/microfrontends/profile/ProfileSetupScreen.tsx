@@ -6,9 +6,10 @@ import { useSkills } from '../../../hooks/useSkills';
 import { skillsUtils } from '../../../services/skillsAPI';
 import { useCurrentTheme, getLogoAsset, useTheme } from '../../../contexts/ThemeContext';
 import ThemedLogo from '../../../components/ThemedLogo';
+import { createUserProfile } from '../../../services/userAPI';
 
 interface ProfileSetupScreenProps {
-  onContinue: (avatarUri?: string | null) => void;
+  onContinue: (avatarUri?: string | null, createdProfile?: any) => void;
 }
 
 export default function ProfileSetupScreen({ onContinue }: ProfileSetupScreenProps) {
@@ -157,7 +158,7 @@ export default function ProfileSetupScreen({ onContinue }: ProfileSetupScreenPro
     );
   };
 
-  const handleContinue = () => {
+  const handleContinue = async () => {
     let hasError = false;
     const newErrors: { fullName?: string } = {};
     if (!fullName.trim()) {
@@ -165,8 +166,28 @@ export default function ProfileSetupScreen({ onContinue }: ProfileSetupScreenPro
       hasError = true;
     }
     setErrors(hasError ? newErrors : null);
-    if (!hasError) {
-      onContinue(avatarUri);
+    if (hasError) return;
+
+    // Split fullName into firstName and lastName (naive split)
+    const [firstName, ...rest] = fullName.trim().split(' ');
+    const lastName = rest.join(' ') || '-';
+
+    setLoading(true);
+    try {
+      const createdProfile = await createUserProfile({
+        firstName,
+        lastName,
+        headline: profession,
+        summary: bio,
+        location,
+        skills,
+        // Add more fields as needed
+      });
+      setLoading(false);
+      onContinue(avatarUri, createdProfile);
+    } catch (error: any) {
+      setLoading(false);
+      Alert.alert('Profile Setup Failed', error.message || 'Could not create profile.');
     }
   };
 

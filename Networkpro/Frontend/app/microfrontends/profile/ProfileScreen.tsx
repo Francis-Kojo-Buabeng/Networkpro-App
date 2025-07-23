@@ -1,47 +1,42 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, Image, TouchableOpacity, ScrollView, Dimensions } from 'react-native';
+import React, { ReactNode, useState } from 'react';
+import { View, Text, StyleSheet, Image, TouchableOpacity, ScrollView, Dimensions, TextInput } from 'react-native';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { useCurrentTheme } from '../../../contexts/ThemeContext';
+import * as ImagePicker from 'expo-image-picker';
 
 const { width } = Dimensions.get('window');
 
-interface ProfileScreenProps {
-  profile: {
-    id: string;
-    name: string;
-    title: string;
-    company: string;
-    location: string;
-    avatar: any;
-    headerImage?: any;
-    about: string;
-    experience: Array<{
-      id: string;
-      title: string;
-      company: string;
-      duration: string;
-      description: string;
-    }>;
-    education: Array<{
-      id: string;
-      degree: string;
-      school: string;
-      year: string;
-    }>;
-    skills: string[];
-    mutualConnections: number;
-    isConnected: boolean;
-    profileViews?: number;
-    followers?: number;
-  };
+export interface ProfileScreenProps {
+  profile: any;
   onBack: () => void;
-  onConnect: () => void;
-  onMessage: () => void;
+  onConnect?: () => void;
+  onMessage?: () => void;
+  children?: ReactNode;
+  bannerImage?: string | null;
+  onBannerChange?: (uri: string) => void;
+  avatarImage?: string | null;
+  onAvatarChange?: (uri: string) => void;
 }
 
-export default function ProfileScreen({ profile, onBack, onConnect, onMessage }: ProfileScreenProps) {
-  const theme = useCurrentTheme();
+// Extract ProfileLayout
+export function ProfileLayout({ profile, children, onBack, theme, bannerImage, onBannerChange, avatarImage, onAvatarChange }: { profile: any; children?: ReactNode; onBack: () => void; theme: any; bannerImage?: string | null; onBannerChange?: (uri: string) => void; avatarImage?: string | null; onAvatarChange?: (uri: string) => void; }) {
   const [activeTab, setActiveTab] = useState<'about' | 'experience' | 'education' | 'skills'>('about');
+  const [searchQuery, setSearchQuery] = useState('');
+
+  // Search functionality
+  const handleSearch = (text: string) => {
+    setSearchQuery(text);
+  };
+
+  // Filter content based on search query
+  const filterContent = (content: any[], searchText: string) => {
+    if (!searchText.trim()) return content;
+    return content.filter(item => 
+      Object.values(item).some(value => 
+        value && value.toString().toLowerCase().includes(searchText.toLowerCase())
+      )
+    );
+  };
 
   const renderTabButton = (tab: 'about' | 'experience' | 'education' | 'skills', label: string) => (
     <TouchableOpacity
@@ -92,59 +87,123 @@ export default function ProfileScreen({ profile, onBack, onConnect, onMessage }:
           </View>
         );
       case 'experience':
+        const filteredExperience = filterContent(profile.experience || [], searchQuery);
         return (
           <View style={styles.contentSection}>
             <Text style={[styles.sectionTitle, { color: theme.textColor }]}>Experience</Text>
-            {profile.experience.map((exp, index) => (
-              <View key={exp.id} style={[styles.experienceItem, { borderBottomColor: theme.borderColor }]}>
-                <View style={styles.experienceHeader}>
-                  <View style={[styles.companyLogo, { backgroundColor: theme.surfaceColor }]}>
-                    <MaterialCommunityIcons name="domain" size={24} color={theme.primaryColor} />
+            {filteredExperience.length > 0 ? (
+              filteredExperience.map((exp: any, index: number) => (
+                <View key={exp.id || index} style={[styles.experienceItem, { borderBottomColor: theme.borderColor }]}>
+                  <View style={styles.experienceHeader}>
+                    <View style={[styles.companyLogo, { backgroundColor: theme.surfaceColor }]}>
+                      <MaterialCommunityIcons name="domain" size={24} color={theme.primaryColor} />
+                    </View>
+                    <View style={styles.experienceInfo}>
+                      <Text style={[styles.experienceTitle, { color: theme.textColor }]}>{exp.title}</Text>
+                      <Text style={[styles.experienceCompany, { color: theme.primaryColor }]}>{exp.company}</Text>
+                      <Text style={[styles.experienceDuration, { color: theme.textSecondaryColor }]}>{exp.duration}</Text>
+                    </View>
                   </View>
-                  <View style={styles.experienceInfo}>
-                    <Text style={[styles.experienceTitle, { color: theme.textColor }]}>{exp.title}</Text>
-                    <Text style={[styles.experienceCompany, { color: theme.primaryColor }]}>{exp.company}</Text>
-                    <Text style={[styles.experienceDuration, { color: theme.textSecondaryColor }]}>{exp.duration}</Text>
-                  </View>
+                  <Text style={[styles.experienceDescription, { color: theme.textColor }]}>{exp.description}</Text>
                 </View>
-                <Text style={[styles.experienceDescription, { color: theme.textColor }]}>{exp.description}</Text>
-              </View>
-            ))}
+              ))
+            ) : (
+              <Text style={[styles.noResultsText, { color: theme.textSecondaryColor }]}>
+                {searchQuery ? 'No experience found matching your search.' : 'No experience added yet.'}
+              </Text>
+            )}
           </View>
         );
       case 'education':
+        const filteredEducation = filterContent(profile.education || [], searchQuery);
         return (
           <View style={styles.contentSection}>
             <Text style={[styles.sectionTitle, { color: theme.textColor }]}>Education</Text>
-            {profile.education.map((edu, index) => (
-              <View key={edu.id} style={[styles.educationItem, { borderBottomColor: theme.borderColor }]}>
-                <View style={styles.educationHeader}>
-                  <View style={[styles.schoolLogo, { backgroundColor: theme.surfaceColor }]}>
-                    <MaterialCommunityIcons name="school" size={24} color={theme.primaryColor} />
+            {filteredEducation.length > 0 ? (
+              filteredEducation.map((edu: any, index: number) => (
+                <View key={edu.id || index} style={[styles.educationItem, { borderBottomColor: theme.borderColor }]}>
+                  <View style={styles.educationHeader}>
+                    <View style={[styles.schoolLogo, { backgroundColor: theme.surfaceColor }]}>
+                      <MaterialCommunityIcons name="school" size={24} color={theme.primaryColor} />
+                    </View>
+                    <View style={styles.educationInfo}>
+                      <Text style={[styles.educationDegree, { color: theme.textColor }]}>{edu.degree}</Text>
+                      <Text style={[styles.educationSchool, { color: theme.primaryColor }]}>{edu.school}</Text>
+                      <Text style={[styles.educationDuration, { color: theme.textSecondaryColor }]}>{edu.duration}</Text>
+                    </View>
                   </View>
-                  <View style={styles.educationInfo}>
-                    <Text style={[styles.educationDegree, { color: theme.textColor }]}>{edu.degree}</Text>
-                    <Text style={[styles.educationSchool, { color: theme.primaryColor }]}>{edu.school}</Text>
-                    <Text style={[styles.educationYear, { color: theme.textSecondaryColor }]}>{edu.year}</Text>
-                  </View>
+                  <Text style={[styles.educationDescription, { color: theme.textColor }]}>{edu.description}</Text>
                 </View>
-              </View>
-            ))}
+              ))
+            ) : (
+              <Text style={[styles.noResultsText, { color: theme.textSecondaryColor }]}>
+                {searchQuery ? 'No education found matching your search.' : 'No education added yet.'}
+              </Text>
+            )}
           </View>
         );
       case 'skills':
+        const filteredSkills = profile.skills ? profile.skills.filter((skill: string) => 
+          skill.toLowerCase().includes(searchQuery.toLowerCase())
+        ) : [];
         return (
           <View style={styles.contentSection}>
             <Text style={[styles.sectionTitle, { color: theme.textColor }]}>Skills</Text>
-            <View style={styles.skillsContainer}>
-              {profile.skills.map((skill, index) => (
-                <View key={index} style={[styles.skillChip, { backgroundColor: theme.primaryColor, shadowColor: theme.shadowColor }]}>
-                  <Text style={[styles.skillText, { color: theme.textColor }]}>{skill}</Text>
-                </View>
-              ))}
-            </View>
+            {filteredSkills.length > 0 ? (
+              <View style={styles.skillsContainer}>
+                {filteredSkills.map((skill: string, index: number) => (
+                  <View key={index} style={[styles.skillChip, { backgroundColor: theme.surfaceColor, borderColor: theme.borderColor }]}>
+                    <Text style={[styles.skillText, { color: theme.textColor }]}>{skill}</Text>
+                  </View>
+                ))}
+              </View>
+            ) : (
+              <Text style={[styles.noResultsText, { color: theme.textSecondaryColor }]}>
+                {searchQuery ? 'No skills found matching your search.' : 'No skills added yet.'}
+              </Text>
+            )}
           </View>
         );
+      default:
+        return null;
+    }
+  };
+
+  // Banner image logic
+  const handleBannerPress = async () => {
+    if (!onBannerChange) return;
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (status !== 'granted') {
+      alert('Permission to access gallery is required!');
+      return;
+    }
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [3, 1],
+      quality: 1,
+    });
+    if (!result.canceled && result.assets && result.assets.length > 0) {
+      onBannerChange(result.assets[0].uri);
+    }
+  };
+
+  // Avatar edit logic
+  const handleEditAvatar = async () => {
+    if (!onAvatarChange) return;
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (status !== 'granted') {
+      alert('Permission to access gallery is required!');
+      return;
+    }
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 1,
+    });
+    if (!result.canceled && result.assets && result.assets.length > 0) {
+      onAvatarChange(result.assets[0].uri);
     }
   };
 
@@ -155,6 +214,28 @@ export default function ProfileScreen({ profile, onBack, onConnect, onMessage }:
         <TouchableOpacity style={[styles.backButton, { backgroundColor: theme.cardColor }]} onPress={onBack}>
           <MaterialCommunityIcons name="arrow-left" size={24} color={theme.textColor} />
         </TouchableOpacity>
+        {/* Search Field between icons */}
+        <View style={[styles.searchContainer, {
+          backgroundColor: theme.inputBackgroundColor,
+          borderColor: theme.borderColor,
+        }]}>
+          <MaterialCommunityIcons name="magnify" size={20} color={theme.textSecondaryColor} style={styles.searchIcon} />
+          <TextInput
+            style={[styles.headerSearchInput, {
+              color: theme.textColor,
+            }]}
+            value={searchQuery}
+            onChangeText={handleSearch}
+            placeholder={profile.name || "Search profile..."}
+            placeholderTextColor={theme.placeholderColor}
+            editable={true}
+          />
+          {searchQuery.length > 0 && (
+            <TouchableOpacity onPress={() => setSearchQuery('')} style={styles.clearButton}>
+              <MaterialCommunityIcons name="close-circle" size={20} color={theme.textSecondaryColor} />
+            </TouchableOpacity>
+          )}
+        </View>
         <TouchableOpacity style={[styles.moreButton, { backgroundColor: theme.cardColor }]}>
           <MaterialCommunityIcons name="dots-horizontal" size={24} color={theme.textColor} />
         </TouchableOpacity>
@@ -162,67 +243,45 @@ export default function ProfileScreen({ profile, onBack, onConnect, onMessage }:
 
       <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
         {/* Header Image */}
-        <View style={styles.headerImageContainer}>
-          <View style={[styles.headerImage, { backgroundColor: theme.surfaceColor }]}>
-            <MaterialCommunityIcons name="image" size={48} color={theme.textTertiaryColor} style={styles.headerPlaceholder} />
+        <TouchableOpacity disabled={!onBannerChange} onPress={handleBannerPress} activeOpacity={onBannerChange ? 0.7 : 1}>
+          <View style={styles.headerImageContainer}>
+            {bannerImage || profile.headerImage ? (
+              <Image
+                source={bannerImage ? { uri: bannerImage } : { uri: profile.headerImage }}
+                style={styles.headerImage}
+                resizeMode="cover"
+              />
+            ) : (
+              <View style={[styles.headerImage, { backgroundColor: theme.surfaceColor }]}>
+                <MaterialCommunityIcons name="image" size={48} color={theme.textTertiaryColor} style={styles.headerPlaceholder} />
+              </View>
+            )}
           </View>
-        </View>
+        </TouchableOpacity>
 
         {/* Profile Info */}
         <View style={styles.profileInfo}>
           <View style={styles.avatarContainer}>
-            <Image source={profile.avatar} style={[styles.avatar, { borderColor: theme.cardColor, shadowColor: theme.shadowColor }]} />
+            <Image
+              source={avatarImage ? { uri: avatarImage } : (profile.avatar ? profile.avatar : require('@/assets/images/Avator-Image.jpg'))}
+              style={[styles.avatar, { borderColor: theme.cardColor, shadowColor: theme.shadowColor }]}
+            />
+            {onAvatarChange && (
+              <TouchableOpacity onPress={handleEditAvatar} style={{ position: 'absolute', bottom: 8, right: 8, backgroundColor: theme.cardColor, borderRadius: 16, padding: 6, borderWidth: 1, borderColor: theme.primaryColor, zIndex: 10 }}>
+                <MaterialCommunityIcons name="pencil" size={18} color={theme.primaryColor} />
+              </TouchableOpacity>
+            )}
           </View>
-          
+
           <View style={styles.profileDetails}>
             <Text style={[styles.profileName, { color: theme.textColor }]}>{profile.name}</Text>
             <Text style={[styles.profileTitle, { color: theme.textColor }]}>{profile.title}</Text>
             <Text style={[styles.profileCompany, { color: theme.primaryColor }]}>{profile.company}</Text>
             <Text style={[styles.profileLocation, { color: theme.textSecondaryColor }]}>{profile.location}</Text>
           </View>
-        </View>
 
-        {/* Metrics */}
-        <View style={[styles.metricsContainer, { backgroundColor: theme.cardColor, shadowColor: theme.shadowColor }]}>
-          <View style={styles.metricItem}>
-            <MaterialCommunityIcons name="account-multiple" size={20} color={theme.primaryColor} />
-            <Text style={[styles.metricValue, { color: theme.textColor }]}>{profile.mutualConnections}</Text>
-            <Text style={[styles.metricLabel, { color: theme.textSecondaryColor }]}>connections</Text>
-          </View>
-          <View style={[styles.metricDivider, { backgroundColor: theme.borderColor }]} />
-          <View style={styles.metricItem}>
-            <MaterialCommunityIcons name="eye" size={20} color={theme.primaryColor} />
-            <Text style={[styles.metricValue, { color: theme.textColor }]}>{profile.profileViews || 0}</Text>
-            <Text style={[styles.metricLabel, { color: theme.textSecondaryColor }]}>profile views</Text>
-          </View>
-          <View style={[styles.metricDivider, { backgroundColor: theme.borderColor }]} />
-          <View style={styles.metricItem}>
-            <MaterialCommunityIcons name="account-group" size={20} color={theme.primaryColor} />
-            <Text style={[styles.metricValue, { color: theme.textColor }]}>{profile.followers || 0}</Text>
-            <Text style={[styles.metricLabel, { color: theme.textSecondaryColor }]}>followers</Text>
-          </View>
-        </View>
-
-        {/* Action Buttons */}
-        <View style={styles.actionButtons}>
-          <TouchableOpacity 
-            style={[styles.connectButton, { backgroundColor: theme.primaryColor, shadowColor: theme.shadowColor }]}
-            onPress={onConnect}
-          >
-            <Text style={[styles.connectButtonText, { color: theme.textColor }]}>
-              {profile.isConnected ? 'Message' : 'Connect'}
-            </Text>
-          </TouchableOpacity>
-          
-          {!profile.isConnected && (
-            <TouchableOpacity 
-              style={[styles.messageButton, { borderColor: theme.primaryColor, backgroundColor: theme.cardColor, shadowColor: theme.shadowColor }]}
-              onPress={onMessage}
-            >
-              <MaterialCommunityIcons name="message-text-outline" size={20} color={theme.primaryColor} />
-              <Text style={[styles.messageButtonText, { color: theme.primaryColor }]}>Message</Text>
-            </TouchableOpacity>
-          )}
+          {/* Action Buttons before tabs */}
+          {children}
         </View>
 
         {/* Tabs */}
@@ -235,8 +294,21 @@ export default function ProfileScreen({ profile, onBack, onConnect, onMessage }:
 
         {/* Content */}
         {renderContent()}
+
+        {/* Restore Action Buttons, but only render if !isOwnProfile */}
+        {/* This block is now redundant as buttons are moved */}
       </ScrollView>
     </View>
+  );
+}
+
+// ProfileScreen is now just a shell
+export default function ProfileScreen(props: ProfileScreenProps) {
+  const theme = useCurrentTheme();
+  return (
+    <ProfileLayout profile={props.profile} onBack={props.onBack} theme={theme} bannerImage={props.bannerImage} onBannerChange={props.onBannerChange} avatarImage={props.avatarImage} onAvatarChange={props.onAvatarChange}>
+      {props.children}
+    </ProfileLayout>
   );
 }
 
@@ -246,12 +318,12 @@ const styles = StyleSheet.create({
   },
   header: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
+    justifyContent: 'space-between',
     paddingHorizontal: 16,
-    paddingTop: 50,
-    paddingBottom: 16,
-    zIndex: 1,
+    paddingTop: 16,
+    paddingBottom: 8,
+    backgroundColor: 'transparent',
   },
   backButton: {
     padding: 8,
@@ -264,8 +336,13 @@ const styles = StyleSheet.create({
   scrollView: {
     flex: 1,
   },
+  headerSearchInput: {
+    flex: 1,
+    fontSize: 15,
+    paddingVertical: 4,
+  },
   headerImageContainer: {
-    height: 200,
+    height: 130, // Reduced from 200
     width: '100%',
   },
   headerImage: {
@@ -483,8 +560,12 @@ const styles = StyleSheet.create({
     fontWeight: '500',
     marginBottom: 2,
   },
-  educationYear: {
+  educationDuration: {
     fontSize: 14,
+  },
+  educationDescription: {
+    fontSize: 16,
+    lineHeight: 24,
   },
   skillsContainer: {
     flexDirection: 'row',
@@ -503,5 +584,28 @@ const styles = StyleSheet.create({
   skillText: {
     fontSize: 14,
     fontWeight: '500',
+  },
+  noResultsText: {
+    fontSize: 16,
+    textAlign: 'center',
+    marginTop: 20,
+  },
+  searchContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#f0f0f0',
+    borderRadius: 8,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderWidth: 1,
+    borderColor: '#e0e0e0',
+    minWidth: 180,
+    maxWidth: 250,
+  },
+  searchIcon: {
+    marginRight: 8,
+  },
+  clearButton: {
+    padding: 4,
   },
 }); 

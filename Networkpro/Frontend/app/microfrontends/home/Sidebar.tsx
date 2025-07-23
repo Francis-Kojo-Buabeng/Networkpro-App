@@ -11,6 +11,7 @@ interface SidebarProps {
   userAvatar?: string | null;
   onClose: () => void;
   onMePress?: () => void;
+  onMessagesPress?: () => void;
 }
 
 const sidebarItems = [
@@ -21,7 +22,7 @@ const sidebarItems = [
   { label: 'Settings', icon: 'cog-outline' },
 ];
 
-export default function Sidebar({ userAvatar, onClose, onMePress }: SidebarProps) {
+export default function Sidebar({ userAvatar, onClose, onMePress, onMessagesPress }: SidebarProps) {
   const theme = useCurrentTheme();
   const [showSettings, setShowSettings] = useState(false);
   const [showNetworkOverview, setShowNetworkOverview] = useState(false);
@@ -38,6 +39,8 @@ export default function Sidebar({ userAvatar, onClose, onMePress }: SidebarProps
       setShowSettings(true);
     } else if (label === 'Network Overview') {
       setShowNetworkOverview(true);
+    } else if (label === 'Messages' && typeof onMessagesPress === 'function') {
+      onMessagesPress();
     }
   };
 

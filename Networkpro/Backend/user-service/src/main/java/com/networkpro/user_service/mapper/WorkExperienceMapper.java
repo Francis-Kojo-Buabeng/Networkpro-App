@@ -19,7 +19,7 @@ public class WorkExperienceMapper {
                 .endDate(workExperience.getEndDate())
                 .isCurrentPosition(workExperience.isCurrentPosition())
                 .description(workExperience.getDescription())
-                .companyLogoUrl(null) // TODO: Add company logo URL field to entity
+                .companyLogoUrl(null) //                 private String institutionLogoUrl;
                 .build();
     }
 

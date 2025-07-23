@@ -6,6 +6,9 @@ import {
   StyleSheet,
   Text,
   View,
+  RefreshControl,
+  Modal,
+  TouchableOpacity,
 } from 'react-native';
 import ProfileModal from '../../../components/ProfileModal';
 import NotificationModal from '../../../components/NotificationModal';
@@ -18,6 +21,9 @@ import {
   JobFilters,
   JobSearchHeader
 } from './components';
+import Sidebar from '../home/Sidebar';
+import MyProfileScreen from '../profile/MyProfileScreen';
+// Removed invalid import of useProfileContext due to lint error
 
 const { width } = Dimensions.get('window');
 
@@ -136,6 +142,33 @@ export default function JobsScreen({ userAvatar }: JobsScreenProps) {
   const [companyModalVisible, setCompanyModalVisible] = useState(false);
   const [selectedCompany, setSelectedCompany] = useState<CompanyProfile | null>(null);
   const [notificationModalVisible, setNotificationModalVisible] = useState(false);
+  const [showDashboard, setShowDashboard] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
+  const [showMyProfileModal, setShowMyProfileModal] = useState(false);
+
+  const userProfile = {
+    firstName: 'Your',
+    lastName: 'Name',
+    avatarUri: userAvatar,
+    title: 'Your Title',
+    company: 'Your Company',
+    location: 'Your Location',
+    about: 'About you',
+    headerImage: null,
+    experience: [],
+    education: [],
+    skills: [],
+    mutualConnections: 0,
+    isConnected: false,
+    isOnline: false,
+    isPending: false,
+    isSuggested: false,
+  };
+
+  const onRefresh = () => {
+    setRefreshing(true);
+    setTimeout(() => setRefreshing(false), 1200);
+  };
 
   // Company profile data
   const companyProfiles: { [key: string]: CompanyProfile } = {
@@ -316,7 +349,7 @@ export default function JobsScreen({ userAvatar }: JobsScreenProps) {
         searchQuery={searchQuery}
         onSearchChange={setSearchQuery}
         onFilterToggle={() => setShowFilters(!showFilters)}
-        onProfilePress={() => handleProfilePress({ name: 'Current User', avatar: userAvatar ? { uri: userAvatar } : require('@/assets/images/default-avator.jpg') })}
+        onProfilePress={() => setShowMyProfileModal(true)}
         userAvatar={userAvatar}
         showFilters={showFilters}
         onNotificationPress={() => setNotificationModalVisible(true)}
@@ -341,6 +374,7 @@ export default function JobsScreen({ userAvatar }: JobsScreenProps) {
         keyExtractor={(item) => item.id}
         contentContainerStyle={styles.jobsList}
         showsVerticalScrollIndicator={false}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
         ListHeaderComponent={
           <Text style={[styles.resultsCount, { color: theme.textSecondaryColor }]}>
             {filteredJobs.length} job{filteredJobs.length !== 1 ? 's' : ''} found
@@ -378,6 +412,23 @@ export default function JobsScreen({ userAvatar }: JobsScreenProps) {
         visible={notificationModalVisible}
         onClose={() => setNotificationModalVisible(false)}
       />
+
+      {showDashboard && (
+        <Sidebar
+          userAvatar={userAvatar}
+          onClose={() => setShowDashboard(false)}
+          onMePress={() => {}}
+        />
+      )}
+
+      {showMyProfileModal && (
+        <Modal visible={showMyProfileModal} animationType="slide" onRequestClose={() => setShowMyProfileModal(false)}>
+          <MyProfileScreen profile={userProfile} onBack={() => setShowMyProfileModal(false)} />
+          <TouchableOpacity style={{ position: 'absolute', top: 40, right: 24, zIndex: 100 }} onPress={() => setShowMyProfileModal(false)}>
+            <MaterialCommunityIcons name="close" size={32} color="#222" />
+          </TouchableOpacity>
+        </Modal>
+      )}
     </View>
   );
 }

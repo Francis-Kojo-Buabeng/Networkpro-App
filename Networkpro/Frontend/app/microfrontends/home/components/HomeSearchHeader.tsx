@@ -36,11 +36,11 @@ export default function HomeSearchHeader({
           />
         </TouchableOpacity>
         
-        <View style={[styles.searchContainer, { backgroundColor: theme.inputBackgroundColor }]}>
+        <View style={[styles.searchContainer, { backgroundColor: theme.inputBackgroundColor, borderColor: theme.borderColor }]}>
           <MaterialCommunityIcons name="magnify" size={20} color={theme.textSecondaryColor} style={styles.searchIcon} />
           <TextInput
             style={[styles.searchInput, { color: theme.textColor }]}
-            placeholder="Search jobs, people..."
+            placeholder="Search"
             placeholderTextColor={theme.placeholderColor}
             value={searchQuery}
             onChangeText={onSearchChange}
@@ -62,12 +62,13 @@ const styles = StyleSheet.create({
   header: {
     paddingTop: 25,
     paddingHorizontal: 20,
+    paddingBottom: 2,
   },
   headerTop: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 16,
+    marginBottom: 5,
   },
   profileButton: {
     padding: 4,
@@ -76,7 +77,7 @@ const styles = StyleSheet.create({
     width: 44,
     height: 44,
     borderRadius: 22,
-    borderWidth: 3,
+    borderWidth: 2,
   },
   headerButton: {
     padding: 8,
@@ -84,11 +85,11 @@ const styles = StyleSheet.create({
   searchContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    borderRadius: 12,
-    paddingHorizontal: 12,
+    borderRadius: 25,
+    paddingHorizontal: 16,
     borderWidth: 1,
     flex: 1,
-    height: 40,
+    height: 44,
     marginHorizontal: 12,
   },
   searchIcon: {
@@ -97,6 +98,6 @@ const styles = StyleSheet.create({
   searchInput: {
     flex: 1,
     height: 44,
-    fontSize: 17,
+    fontSize: 16,
   },
 }); 

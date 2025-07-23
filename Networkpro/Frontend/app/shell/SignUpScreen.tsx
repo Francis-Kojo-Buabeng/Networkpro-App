@@ -1,8 +1,8 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, Image, TextInput, TouchableOpacity, KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
-import { useCurrentTheme, getLogoAsset, useTheme } from '../../contexts/ThemeContext';
-import ThemedLogo from '../../components/ThemedLogo';
 import { Ionicons } from '@expo/vector-icons';
+import React, { useState } from 'react';
+import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import ThemedLogo from '../../components/ThemedLogo';
+import { useCurrentTheme, useTheme } from '../../contexts/ThemeContext';
 
 interface SignUpScreenProps {
   onContinue: () => void;
@@ -25,7 +25,7 @@ export default function SignUpScreen({ onContinue, onBack, onSignIn }: SignUpScr
 
   const getBackendUrl = () => {
     // For all devices (Expo Go, emulator, web), use your PC's IP address
-    return 'http://10.232.142.14:8090/api/v1/authentication/register';
+    return 'http://10.132.189.248:8090/api/v1/authentication/register';
   };
 
   const handleSignUp = async () => {

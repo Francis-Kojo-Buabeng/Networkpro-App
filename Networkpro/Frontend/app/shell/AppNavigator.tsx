@@ -17,7 +17,7 @@ interface AppNavigatorProps {
   userAvatar?: string | null;
 }
 
-export default function AppNavigator({ userAvatar }: AppNavigatorProps) {
+export default function AppNavigator({ userAvatar, createdProfile, initialRouteName = 'Home' }: { userAvatar?: string | null, createdProfile?: any, initialRouteName?: string }) {
   const theme = useCurrentTheme();
   const { tabBarTranslateY } = useTabBarVisibility();
 
@@ -28,6 +28,7 @@ export default function AppNavigator({ userAvatar }: AppNavigatorProps) {
 
   return (
     <Tab.Navigator
+      initialRouteName={initialRouteName}
       screenOptions={{
         headerShown: false,
         tabBarStyle: [
@@ -59,7 +60,7 @@ export default function AppNavigator({ userAvatar }: AppNavigatorProps) {
           ),
         }}
       >
-        {() => <HomeScreen userAvatar={userAvatar} />}
+        {({ navigation }) => <HomeScreen userAvatar={userAvatar} createdProfile={createdProfile} navigation={navigation} />}
       </Tab.Screen>
       <Tab.Screen 
         name="Messages" 
@@ -73,13 +74,14 @@ export default function AppNavigator({ userAvatar }: AppNavigatorProps) {
       </Tab.Screen>
       <Tab.Screen 
         name="Network" 
-        component={NetworkScreen}
         options={{
           tabBarIcon: ({ color, size }) => (
             <MaterialCommunityIcons name="account-group" color={color} size={size} />
           ),
         }}
-      />
+      >
+        {() => <NetworkScreen userAvatar={userAvatar} />}
+      </Tab.Screen>
       <Tab.Screen 
         name="Post" 
         options={{
@@ -88,7 +90,7 @@ export default function AppNavigator({ userAvatar }: AppNavigatorProps) {
           ),
         }}
       >
-        {() => <PostScreen userAvatar={userAvatar} />}
+        {() => <PostScreen userAvatar={userAvatar} userProfile={createdProfile} />}
       </Tab.Screen>
       <Tab.Screen 
         name="Jobs" 
